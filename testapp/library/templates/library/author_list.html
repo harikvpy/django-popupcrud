@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Authors</h1>
+{% url "library:new-author" as new_author_url %}
+<p><a href="{{ new_author_url }}">Create New Author</a></p>
+<table border="1" cellspacing="5" cellpadding="5">
+<thead>
+    <th>Name</th>
+    <th>Pen Name</th>
+    <th>Age</th>
+    <th>Books</th>
+</thead>
+<tbody>
+{% for author in object_list %}
+<tr>
+    {% url "library:edit-author" author.pk as edit_url %}
+    <td><a href="{{ edit_url }}">{{ author.name }}</a></td>
+    <td>{{ author.penname }}</td>
+    <td>{{ author.age }}</td>
+    <td>{{ author.book_set.count }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endblock content %}
