@@ -6,6 +6,7 @@ from django.shortcuts import render
 from django.views import generic
 
 from .models import Author, Book
+from popupcrud.views import PopupCrudViewSet
 
 # Create your views here.
 
@@ -54,4 +55,16 @@ class EditBook(generic.UpdateView):
 
 class DeleteBook(generic.DeleteView):
     model = Book
+    success_url = reverse_lazy("library:books-list")
+
+
+class AuthorCrudViewset(PopupCrudViewSet):
+    model = Author
+    fields = ('name', 'penname', 'age')
+    success_url = reverse_lazy("library:writers-list")
+
+
+class BookCrudViewset(PopupCrudViewSet):
+    model = Book
+    fields = ('title', 'author')
     success_url = reverse_lazy("library:books-list")

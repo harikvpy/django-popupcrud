@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Books</h1>
-{% url "library:new-book" as new_url %}
+{% url "library:new-title" as new_url %}
 <p><a href="{{ new_url }}">Create New Book</a></p>
 <table border="1" cellspacing="5" cellpadding="5">
 <thead>
@@ -12,8 +12,8 @@
 <tbody>
 {% for book in object_list %}
 <tr>
-    {% url "library:edit-book" book.pk as edit_url %}
-    {% url "library:delete-book" book.pk as delete_url %}
+    {% url "library:edit-title" book.pk as edit_url %}
+    {% url "library:delete-title" book.pk as delete_url %}
     <td><a href="{{ edit_url }}">{{ book.title }}</a></td>
     <td>{{ book.author }}</td>
     <td><a href="{{ delete_url }}">Delete</a></td>
