@@ -64,7 +64,6 @@ class AuthorCrudViewset(PopupCrudViewSet):
     list_display = ('name', 'penname', 'age', 'double_age', 'half_age')
     list_url = reverse_lazy("library:writers-list")
     new_url = reverse_lazy("library:new-writer")
-    paginate_by = 1
 
     def half_age(self, author):
         return author.age/2
@@ -85,6 +84,7 @@ class BookCrudViewset(PopupCrudViewSet):
     list_display = ('title', 'author')
     list_url = reverse_lazy("library:title-list")
     new_url = reverse_lazy("library:new-title")
+    paginate_by = None # disable pagination
 
     @staticmethod
     def get_edit_url(obj):
