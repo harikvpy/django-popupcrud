@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'bootstrap3',
     'popupcrud',
     'library',
 ]
@@ -122,3 +123,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# for livereload to work
+INTERNAL_IPS = ['127.0.0.1', '10.0.3.2', '192.168.225.101', '192.168.225.1']
+INSTALLED_APPS = ['livereload'] + INSTALLED_APPS
+MIDDLEWARE += ['livereload.middleware.LiveReloadScript']
+import socket
+if socket.gethostname() == 'kaveri':
+    LIVERELOAD_HOST = '192.168.225.101'
