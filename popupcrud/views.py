@@ -104,6 +104,8 @@ class ListView(AttributeThunk, PaginationMixin, generic.ListView):
     def get_context_data(self, **kwargs):
         context = super(ListView, self).get_context_data(**kwargs)
         context['model_options'] = self._viewset.model._meta
+        context['new_button_text'] = ugettext("New {0}").format(
+            self._viewset.model._meta.verbose_name)
         context['new_url'] = getattr(self._viewset, 'new_url', None)
         context['edit_url'] = getattr(self._viewset, 'edit_url', None)
         context['new_item_dialog_title'] = ugettext("New {0}").format(
