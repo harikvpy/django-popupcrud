@@ -15,6 +15,6 @@
 {% else %}
 <p>{% block empty_table_label %}{% trans "No items." %}{% endblock empty_table_label %}</p>
 {% endif %}
-{% include "popupcrud/list_popup.html" %}
+{% include "popupcrud/_list_popup.html" %}
 {% include "popupcrud/_pagination.html" %}
 {% endblock content %}
