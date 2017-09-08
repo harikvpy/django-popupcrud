@@ -61,10 +61,34 @@ class DeleteBook(generic.DeleteView):
 class AuthorCrudViewset(PopupCrudViewSet):
     model = Author
     fields = ('name', 'penname', 'age')
-    success_url = reverse_lazy("library:writers-list")
+    list_display = ('name', 'penname', 'age', 'double_age', 'half_age')
+    list_url = reverse_lazy("library:writers-list")
+    new_url = reverse_lazy("library:new-writer")
+
+    def half_age(self, author):
+        return author.age/2
+    half_age.label = "Half life"
+
+    @staticmethod
+    def get_edit_url(obj):
+        return reverse_lazy("library:edit-writer", kwargs={'pk': obj.pk})
+
+    @staticmethod
+    def get_delete_url(obj):
+        return reverse_lazy("library:delete-writer", kwargs={'pk': obj.pk})
 
 
 class BookCrudViewset(PopupCrudViewSet):
     model = Book
     fields = ('title', 'author')
-    success_url = reverse_lazy("library:books-list")
+    list_display = ('title', 'author')
+    list_url = reverse_lazy("library:title-list")
+    new_url = reverse_lazy("library:new-title")
+
+    @staticmethod
+    def get_edit_url(obj):
+        return reverse_lazy("library:edit-title", kwargs={'pk': obj.pk})
+
+    @staticmethod
+    def get_delete_url(obj):
+        return reverse_lazy("library:delete-title", kwargs={'pk': obj.pk})

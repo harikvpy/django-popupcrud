@@ -5,7 +5,9 @@ from functools import update_wrapper
 
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.decorators import classonlymethod
+from django.utils.translation import ugettext_lazy as _, ugettext
 from django.views import generic
+from django.http import JsonResponse
 
 
 class AjaxObjectFormMixin(object):
@@ -26,12 +28,9 @@ class AjaxObjectFormMixin(object):
     _supports_ajax_object_op = False
 
     def dispatch(self, request, *args, **kwargs): # pylint: disable=missing-docstring
-        if request.is_ajax() and getattr(self, 'template_name', None):
+        if request.is_ajax():
             if not hasattr(self, 'ajax_template_name'):
-                split = self.template_name.split('.html')
-                split[-1] = '_inner'
-                split.append('.html')
-                self.ajax_template_name = ''.join(split)
+                self.ajax_template_name = "popupcrud/form_inner.html"
             self.template_name = self.ajax_template_name
             self._supports_ajax_object_op = True
 
@@ -70,23 +69,80 @@ class AttributeThunk(object):
 
     @property
     def success_url(self):
-        return self._viewset.success_url
+        return self._viewset.list_url
 
-
-# Individual CRUD views are based on Django CBVs with custom constructor
-# to supply the viewset class as argument. This viewset class argument is
-# used to retrieve the class.model, class.fields, class.success_url, etc.
-# properties from it so that the user needs to define this only once
-# for each viewset.
 
 class ListView(AttributeThunk, generic.ListView):
+    """ Model list view """
+
     def __init__(self, viewset_cls, *args, **kwargs):
         super(ListView, self).__init__(viewset_cls, *args, **kwargs)
 
+    def get_queryset(self):
+        qs = super(ListView, self).get_queryset()
+        # TODO: 2017年09月06日 (週三) 06時13分10秒
+        #		Apply custom ordering based on GET arguments
+        return qs
 
-class CreateView(AttributeThunk, AjaxObjectFormMixin, generic.CreateView):
+    def get_template_names(self):
+        templates = super(ListView, self).get_template_names()
+
+        # if the viewset customized listview template, make sure that is
+        # looked for first by putting its name in the front of the list
+        if hasattr(self._viewset, 'list_template'):
+            templates.insert(0, self._viewset.list_template)
+
+        # make the default template of lower priority than the one
+        # determined by default -- <model>_list.html
+        templates.append("popupcrud/list.html")
+        return templates
+
+    def get_context_data(self, **kwargs):
+        context = super(ListView, self).get_context_data(**kwargs)
+        context['model_options'] = self._viewset.model._meta
+        context['new_url'] = getattr(self._viewset, 'new_url', None)
+        context['edit_url'] = getattr(self._viewset, 'edit_url', None)
+        context['new_item_dialog_title'] = ugettext("New {0}").format(
+            self.model._meta.verbose_name)
+        context['edit_item_dialog_title'] = ugettext("Edit {0}").format(
+            self.model._meta.verbose_name)
+        return context
+
+
+class TemplateNameMixin(object):
+    """
+    Add popupcrud/form.html as a secondary choice template to the template
+    name list
+    """
+    def get_template_names(self):
+        templates = super(TemplateNameMixin, self).get_template_names()
+
+        # if the viewset customized listview template, make sure that is
+        # looked for first by putting its name in the front of the list
+        template_attr_name = getattr(self, "popupcrud_template_name")
+
+        if hasattr(self._viewset, template_attr_name):
+            templates.insert(0, getattr(self._viewset, template_attr_name))
+
+        # make the default template of lower priority than the one
+        # determined by default -- <model>_list.html
+        templates.append(getattr(self, template_attr_name))
+        return templates
+
+
+class CreateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
+                 generic.CreateView):
+
+    popupcrud_template_name = "form_template"
+    form_template = "popupcrud/form.html"
+
     def __init__(self, viewset_cls, *args, **kwargs):
         super(CreateView, self).__init__(viewset_cls, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        kwargs['pagetitle'] = ugettext("New {0}").format(self._viewset.model._meta.verbose_name)
+        kwargs['form_url'] = self._viewset.new_url
+        return super(CreateView, self).get_context_data(**kwargs)
 
 
 class DetailView(AttributeThunk, generic.DetailView):
@@ -94,89 +150,103 @@ class DetailView(AttributeThunk, generic.DetailView):
         super(DetailView, self).__init__(viewset_cls, *args, **kwargs)
 
 
-class UpdateView(AttributeThunk, AjaxObjectFormMixin, generic.UpdateView):
+class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
+                 generic.UpdateView):
+
+    popupcrud_template_name = "form_template"
+    form_template = "popupcrud/form.html"
+
     def __init__(self, viewset_cls, *args, **kwargs):
         super(UpdateView, self).__init__(viewset_cls, *args, **kwargs)
 
+    def get_context_data(self, **kwargs):
+        kwargs['pagetitle'] = _("Edit {0}").format(self._viewset.model._meta.verbose_name)
+        kwargs['form_url'] = self._viewset.get_edit_url(self.object)
+        return super(UpdateView, self).get_context_data(**kwargs)
 
-class DeleteView(AttributeThunk, AjaxObjectFormMixin, generic.DeleteView):
+
+class DeleteView(AttributeThunk, generic.DeleteView):
+
     def __init__(self, viewset_cls, *args, **kwargs):
         super(DeleteView, self).__init__(viewset_cls, *args, **kwargs)
 
+    def delete(self, request, *args, **kwargs):
+        """ Override to return JSON success response for AJAX requests """
+        retval = super(DeleteView, self).delete(request, *args, **kwargs)
+        if self.request.is_ajax():
+            return JsonResponse({
+                'result': True,
+                'message': ugettext("{0} {1} deleted").format(
+                    self.model._meta.verbose_name,
+                    unicode(self.object))
+            })
+        else:
+            return retval
+
 
 class PopupCrudViewSet(object):
-    fields = ()
+    """
+    Base class to create CRUD views for a model.
 
-    # @classonlymethod
-    # def list(cls, **initkwargs):
-    #     pass
+    To use:
 
-    # @classonlymethod
-    # def create(cls, **initkwargs):
-    #     pass
+    1. Instantiate a child class of this for your model for which you wish
+    to build crud views.
 
-    # @classonlymethod
-    # def read(cls, **initkwargs):
-    #     pass
+    2. Provide the following in the derived class:
 
-    # @classonlymethod
-    # def update(cls, **initkwargs):
-    #     pass
+        Required:
 
-    # @classonlymethod
-    # def delete(cls, **initkwargs):
-    #     pass
+            Properties:
+                model: model name to provide crud views for
+                list_display: fields to be included in the list view columns (a la
+                    ModelAdmin.list_display, though not supporting all its flavors)
+                fields: fields to be included in the form
+                list_url: the list view url to redirect to after a successful
+                    add/edit/delete operation.
+                new_url: URL to the CRUD create view for creating a new object.
 
-    # class AttributeThunk(object):
-    #     """
-    #     This class thunks the various attributes expected by Django generic
-    #     CRUD views as properties of the parent viewset class instance.
-    #     """
-    #     def __init__(self, viewset, *args, **kwargs):
-    #         self._viewset = viewset
-    #         super(PopupCrudViewSet.AttributeThunk, self).__init__(*args, **kwargs)
+            Methods:
+                get_edit_url(obj): staticmethod. Return the url to the edit
+                    object view.
+                get_delete_url: staticmethod. Return the url to the CRUD delete
+                    object view. Object is deleted using AJAX after user
+                    confirmation which is displayed as a popup.
 
-    #     @property
-    #     def model(self):
-    #         return self._viewset.model
+        Optional:
 
-    #     @property
-    #     def fields(self):
-    #         return self._viewset.fields
+            Class Properties:
+                list_template: the template file to use for list view
+                create_template: template to use for create new object view
+                edit_template: template to use for editing an existing object view
+                detail_template: template to use for detail view
+                delete_template: template to use for delete view
 
-    #     @property
-    #     def success_url(self):
-    #         return self._viewset.success_url
+            Methods:
+                get_detail_url: staticmetod. Return the url to the object's
 
-    # # Individual CRUD views are based on Django CBVs with custom constructor
-    # # to supply the viewset class as argument. This viewset class argument is
-    # # used to retrieve the class.model, class.fields, class.success_url, etc.
-    # # properties from it so that the user needs to define this only once
-    # # for each viewset.
-    # class ListView(AttributeThunk, generic.ListView):
-    #     def __init__(self, viewset_cls, *args, **kwargs):
-    #         super(PopupCrudViewSet.ListView, self).__init__(
-    #             viewset_cls, *args, **kwargs)
+                    detail view. Default implementation in base class returns
+                    None, which disables the object detail view.
 
-    # class CreateView(AttributeThunk, AjaxObjectFormMixin, generic.CreateView):
-    #     def __init__(self, viewset_cls, *args, **kwargs):
-    #         super(PopupCrudViewSet.CreateView, self).__init__(
-    #             viewset_cls, *args, **kwargs)
+    3. Connect the five different methods to the url resolver. For example:
 
-    # class DetailView(AttributeThunk, generic.DetailView):
-    #     def __init__(self, viewset_cls, *args, **kwargs):
-    #         super(PopupCrudViewSet.DetailView, self).__init__(
-    #             viewset_cls, *args, **kwargs)
+        MyModelViewset(PopupCrudViewSet):
+            model = MyModel
+            ...
 
-    # class UpdateView(AttributeThunk, AjaxObjectFormMixin, generic.UpdateView):
-    #     def __init__(self, viewset_cls, *args, **kwargs):
-    #         super(PopupCrudViewSet.UpdateView, self).__init__(
-    #             viewset_cls, *args, **kwargs)
-
-    # class DeleteView(AttributeThunk, AjaxObjectFormMixin, generic.DeleteView):
-    #     def __init__(self, viewset_cls, *args, **kwargs):
-    #         super(PopupCrudViewSet.DeleteView, self).__init__(
-    #             viewset_cls, *args, **kwargs)
+        urlpatterns = [
+            url(r'mymodel/$', MyModelViewset.list(), name='mymodels-list'),
+            url(r'mymodel/new/$', MyModelViewset.create(), name='new-mymodel'),
+            url(r'mymodel/(?P<pk>\d+)/$', MyModelViewset.detail(), name='mymodel-detail'),
+            url(r'mymodel/(?P<pk>\d+)/edit/$', MyModelViewset.update(), name='edit-mymodel'),
+            url(r'mymodel/(?P<pk>\d+)/delete/$', MyModelViewset.delete(), name='delete-mymodel'),
+            ]
+    """
+    # model = None
+    # fields = ()
+    # form_class = None
+    # list_url = None
+    #
 
     @classonlymethod
     def generate_view(cls, crud_view_class, **initkwargs):
@@ -231,3 +301,15 @@ class PopupCrudViewSet(object):
     @classonlymethod
     def delete(cls, **initkwargs):
         return cls.generate_view(DeleteView, **initkwargs)
+
+    @staticmethod
+    def get_detail_url(obj):
+        return None
+
+    @staticmethod
+    def get_edit_url(obj):
+        return "#"
+
+    @staticmethod
+    def get_delete_url(obj):
+        return "#"

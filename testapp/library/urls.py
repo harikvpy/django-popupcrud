@@ -14,8 +14,9 @@ urlpatterns = [
     url(r'^writers/$', views.AuthorCrudViewset.list(), name='writers-list'),
     url(r'^writers/new/$', views.AuthorCrudViewset.create(), name='new-writer'),
     url(r'^writers/(?P<pk>\d+)/edit/$', views.AuthorCrudViewset.update(), name='edit-writer'),
+    url(r'^writers/(?P<pk>\d+)/delete/$', views.AuthorCrudViewset.delete(), name='delete-writer'),
 
-    url(r'^titles/$', views.BookCrudViewset.list(), name='titles-list'),
+    url(r'^titles/$', views.BookCrudViewset.list(), name='title-list'),
     url(r'^titles/new/$', views.BookCrudViewset.create(), name='new-title'),
     url(r'^titles/(?P<pk>\d+)/edit/$', views.BookCrudViewset.update(), name='edit-title'),
     url(r'^titles/(?P<pk>\d+)/delete/$', views.BookCrudViewset.delete(), name='delete-title'),

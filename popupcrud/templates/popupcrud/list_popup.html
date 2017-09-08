@@ -1,0 +1,125 @@
+{% load i18n bsmodal %}
+{% bsmodal '??' 'create-edit-modal' close_title_button=Yes %}
+    {# modal body will be filled in by jQuery.load(<new_object_url>) return value #}
+    ??
+{% endbsmodal %}
+{% trans 'Confirm Delete' as confirm_delete_title %}
+{% bsmodal confirm_delete_title 'delete-modal' close_title_button=Yes %}
+    <strong>{{ model_options.verbose_name }}:</strong> <span id='id_object_name'></span><br/>
+    <br/>
+    <p>{% trans 'Are you sure you want to delete this?' %}</p>
+    <form role="form" id="delete-form" action="" method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <button type="submit" class="btn btn-danger">{% trans 'Yes' %}</button>
+            <button type="button" class="btn btn-primary" data-dismiss="modal">{% trans 'No' %}</button>
+        </div>
+    </form >
+{% endbsmodal %}
+{% trans 'Deleted' as deleted %}
+{% bsmodal deleted 'delete-result-modal' close_title_button=Yes %}
+    <div id='id_delete_result'></div><br/>
+    <div class="form-group">
+        <button type="button" class="btn btn-default" data-dismiss="modal">{% trans 'Close' %}</button>
+    </div>
+{% endbsmodal %}
+<script type="text/javascript" charset="utf-8">
+$(document).ready(function() {
+    $("[name=btn_create_new]").click(function(evtObj) {
+        evtObj.preventDefault();
+        $('#create-edit-modal .modal-body').load("{{ new_url }}", function () {
+            $('#create-edit-modal .modal-title').text("{{ new_item_dialog_title }}");
+            $('#create-edit-modal').modal('toggle');
+            formAjaxSubmit('#create-edit-form', '#create-edit-modal', 
+                function(xhr) {
+                    {% if related_field %}
+                        {% if related_field_multiple %}
+                            var curVal = $("#id_{{related_field}}").val();
+                            $("#id_{{related_field}}").append($("<option></option>").
+                                attr("value", xhr.pk).text(xhr.name));
+                            curVal.push(xhr.pk);
+                            $("#id_{{related_field}}").val(curVal).trigger('change');
+                        {% else %}
+                            $("#id_{{related_field}}").append($("<option></option>").
+                                attr("value", xhr.pk).text(xhr.name)).val(xhr.pk).trigger('change');
+                        {% endif %}
+                    {% else %}
+                        location.reload();
+                    {% endif %}
+                });
+            });
+    });
+    {% if not related_field %}
+    {# edit a account action handler #}
+    $("a[name='edit_object']").click(function(evtObj) {
+        evtObj.preventDefault();
+        $('#create-edit-modal .modal-body').load($(evtObj.target).parent('a').data('url'), function () {
+            $('#create-edit-modal .modal-title').text("{{ edit_item_dialog_title }}");
+            $('#create-edit-modal').modal('toggle');
+            formAjaxSubmit('#create-edit-form', '#create-edit-modal', 
+                function(xhr) {
+                    location.reload();
+                });
+        });
+    });
+    {# delete a account action handler #}
+    $("a[name='delete_object']").click(function(evtObj) {
+        evtObj.preventDefault();
+        $('#delete-modal #id_object_name').text(
+            $(evtObj.target).parents('tr').children(':nth-child(1)').text());
+        $('#delete-modal .modal-body form').attr('action', $(evtObj.target).parent('a').data('url'));
+        $('#delete-modal').modal('toggle');
+        formAjaxSubmit('#delete-form', '#delete-modal', 
+            function(xhr) {
+                if (xhr.result) {
+                    $("#delete-result-modal #id_delete_result").text(
+                        xhr.message)
+                    setTimeout(function() { 
+                        $('#delete-result-modal').modal('toggle');
+                        location.reload();
+                    }, 2000);
+                } else {
+                    $('#delete-result-modal #id_delete_result').text("{% trans 'Account not deleted!' %}");
+                    setTimeout(function() { 
+                        $('#delete-result-modal').modal('toggle');
+                    }, 2000);
+                }
+                $('#delete-result-modal').modal('toggle');
+            }
+        );
+    });
+    {% endif %}
+});
+/* A simple function that uses jQuery to submit a form using AJAX 
+
+   Parameters:
+    form:
+    modal:
+    complete:
+
+ */
+var formAjaxSubmit = function(form, modal, complete) {
+    $(form).submit(function(e) {
+        e.preventDefault();
+        $.ajax({
+            type: $(this).attr('method'),
+            url: $(this).attr('action'),
+            data: $(this).serialize(),
+            success: function (xhr, ajaxOptions, thrownError) {
+                if ( $(xhr).find('.has-error').length > 0 ||
+                     $(xhr).find('.alert').length > 0) {
+                    $(modal).find('.block-content').html(xhr);
+                    formAjaxSubmit(form, modal, complete);
+                } else {
+                    $(modal).modal('toggle');
+                    if (typeof complete == "function") {
+                        complete(xhr); // notify caller
+                    }
+                }
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+            }
+        });
+    });
+}
+</script>

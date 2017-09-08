@@ -1,0 +1,17 @@
+{% load i18n bootstrap3 %}
+<form class="form-horizontal" id='create-edit-form' action="{{ form_url }}" method="post" accept-charset="utf-8">
+    {% csrf_token %}
+    {% bootstrap_form form layout='horizontal' %}
+    {% trans "Save" as submit %}
+    {% trans "Reset" as reset %}
+    <div class="form-group">
+        <div class="col-md-offset-3 col-md-9">
+            {% bootstrap_button submit button_type="submit" button_class="btn-primary" %}
+            {# {% bootstrap_button reset button_type="reset" button_class="btn-default" %} #}
+            {% if request.is_ajax %}
+            {% trans "Cancel" as cancel %}
+            <button type="button" class="btn btn-default" data-dismiss="modal">{% trans 'Cancel' %}</button>
+            {% endif %}
+        </div>
+    </div>
+</form>
