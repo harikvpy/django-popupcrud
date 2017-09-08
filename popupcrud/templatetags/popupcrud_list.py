@@ -88,14 +88,15 @@ def list_field_value(view, obj, field, context, index):
 
 def render_item_actions(context, obj):
     action_template = """
-    <a name="edit_object" data-url="{0}" href="javascript:void(0);"><span class="glyphicon glyphicon-pencil"></span></a>
-    <a name="delete_object" data-url="{1}" href="javascript:void(0);"><span class="glyphicon glyphicon-trash"></span></a>
+    <a name="edit_object" data-url="{0}" href="javascript:void(0);"><span class="glyphicon glyphicon-pencil" title="{2}"></span></a>
+    <a name="delete_object" data-url="{1}" href="javascript:void(0);"><span class="glyphicon glyphicon-trash" title="{3}"></span></a>
     """
     view = context['view']
     edit_url = view._viewset.get_edit_url(obj)
     delete_url = view._viewset.get_delete_url(obj)
 
-    return mark_safe(action_template.format(edit_url, delete_url))
+    return mark_safe(action_template.format(
+        edit_url, delete_url, ugettext("Edit"), ugettext("Delete")))
 
 
 def render_list_display(view, obj, context):
@@ -113,7 +114,7 @@ def list_display_results(view, queryset, context):
 @register.inclusion_tag("popupcrud/list_content.html", takes_context=True)
 def list_content(context):
     view = context['view']
-    queryset = view.get_queryset()
+    queryset = context['object_list'] #view.get_queryset()
     return {
         'headers': list_display_headers(view, queryset),
         'results': list_display_results(view, queryset, context)

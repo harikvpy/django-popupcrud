@@ -9,6 +9,7 @@ from django.utils.translation import ugettext_lazy as _, ugettext
 from django.views import generic
 from django.http import JsonResponse
 
+from pure_pagination import PaginationMixin
 
 class AjaxObjectFormMixin(object):
     """
@@ -72,11 +73,14 @@ class AttributeThunk(object):
         return self._viewset.list_url
 
 
-class ListView(AttributeThunk, generic.ListView):
+class ListView(AttributeThunk, PaginationMixin, generic.ListView):
     """ Model list view """
 
     def __init__(self, viewset_cls, *args, **kwargs):
         super(ListView, self).__init__(viewset_cls, *args, **kwargs)
+
+    def get_paginate_by(self, queryset):
+        return self._viewset.paginate_by
 
     def get_queryset(self):
         qs = super(ListView, self).get_queryset()
@@ -246,7 +250,7 @@ class PopupCrudViewSet(object):
     # fields = ()
     # form_class = None
     # list_url = None
-    #
+    paginate_by = 10 # turn on pagination by default
 
     @classonlymethod
     def generate_view(cls, crud_view_class, **initkwargs):

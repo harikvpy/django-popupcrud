@@ -1,0 +1,40 @@
+{% load i18n %}
+{% comment %}
+Pagination template snippet that can be included in templates.
+
+To be used with django-pure-pagination package that expands django's base
+pagination to provide page ranges feature. This feature only returns a limited
+number of pages in the page list when the number of pages is enumerated. This
+number can be set as a configuration (and set from settings.py).
+
+Relies on bootstrap for styling. So it's expected to be included.
+
+For more details refer to pure-pagination documentation.
+{% endcomment %}
+{% if page_obj.pages|length > 1 %}
+<div class="btn-toolbar" role="toolbar">
+<ul class="pagination pull-right" style="margin-top: -10px;">
+    {% if page_obj.has_previous %}
+    <li><a href="?{{ page_obj.previous_page_number.querystring }}">&lsaquo;&lsaquo;</a></li>
+    {% else %}
+    <li class="disabled"><a href="javascript:void(0);">&lsaquo;&lsaquo;</a></li>
+    {% endif %}
+    {% for page in page_obj.pages %}
+        {% if page %}
+            {% ifequal page page_obj.number %}
+            <li class="disabled"><a href="javascript:void(0);">{{ page }}</a></li>
+            {% else %}
+            <li><a href="?{{ page.querystring }}">{{ page }}</a></li>
+            {% endifequal %}
+        {% else %}
+            <li class="disabled"><a href="">...</a></li>
+        {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+    <li><a href="?{{ page_obj.next_page_number.querystring }}">&rsaquo;&rsaquo;</a></li>
+    {% else %}
+    <li class="disabled"><a href="javascript:void(0);">&rsaquo;&rsaquo;</a></li>
+    {% endif %}
+</ul>
+</div>
+{%endif%}
