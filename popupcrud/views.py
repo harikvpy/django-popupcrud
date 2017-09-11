@@ -166,6 +166,11 @@ class CreateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
     def get_permission_required(self):
         return self._viewset.get_permission_required('create')
 
+    def get_form_class(self):
+        if hasattr(self._viewset, 'form_class'):
+            return self._viewset.form_class
+        return super(CreateView, self).get_form_class()
+
 
 class DetailView(AttributeThunk, PermissionRequiredMixin, generic.DetailView):
     def __init__(self, viewset_cls, *args, **kwargs):
@@ -191,6 +196,11 @@ class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
 
     def get_permission_required(self):
         return self._viewset.get_permission_required('update')
+
+    def get_form_class(self):
+        if hasattr(self._viewset, 'form_class'):
+            return self._viewset.form_class
+        return super(CreateView, self).get_form_class()
 
 
 class DeleteView(AttributeThunk, PermissionRequiredMixin, generic.DeleteView):
