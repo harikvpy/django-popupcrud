@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.core.urlresolvers import reverse_lazy
 from django.shortcuts import render
 from django.views import generic
+from django import forms
 
 from .models import Author, Book
 from popupcrud.views import PopupCrudViewSet
@@ -58,9 +59,17 @@ class DeleteBook(generic.DeleteView):
     success_url = reverse_lazy("library:books-list")
 
 
+class AuthorForm(forms.ModelForm):
+    sex = forms.ChoiceField(label="Sex", choices=(('M', 'Male'), ('F', 'Female')))
+    class Meta:
+        model = Author
+        fields = ('name', 'penname', 'age')
+
+
 class AuthorCrudViewset(PopupCrudViewSet):
     model = Author
-    fields = ('name', 'penname', 'age')
+    form_class = AuthorForm
+    #fields = ('name', 'penname', 'age')
     list_display = ('name', 'penname', 'age', 'double_age', 'half_age')
     list_url = reverse_lazy("library:writers-list")
     new_url = reverse_lazy("library:new-writer")
