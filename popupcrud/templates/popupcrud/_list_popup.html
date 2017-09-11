@@ -1,10 +1,10 @@
 {% load i18n bsmodal %}
-{% bsmodal '??' 'create-edit-modal' close_title_button=Yes %}
+{% bsmodal '??' 'create-edit-modal' close_title_button=Yes header_bg_css=bg-primary %}
     {# modal body will be filled in by jQuery.load(<new_object_url>) return value #}
     ??
 {% endbsmodal %}
 {% trans 'Confirm Delete' as confirm_delete_title %}
-{% bsmodal confirm_delete_title 'delete-modal' close_title_button=Yes %}
+{% bsmodal confirm_delete_title 'delete-modal' close_title_button=Yes header_bg_css=bg-primary %}
     <strong>{{ model_options.verbose_name }}:</strong> <span id='id_object_name'></span><br/>
     <br/>
     <p>{% trans 'Are you sure you want to delete this?' %}</p>
@@ -17,7 +17,7 @@
     </form >
 {% endbsmodal %}
 {% trans 'Deleted' as deleted %}
-{% bsmodal deleted 'delete-result-modal' close_title_button=Yes %}
+{% bsmodal deleted 'delete-result-modal' close_title_button=Yes header_bg_css=bg-primary %}
     <div id='id_delete_result'></div><br/>
     <div class="text-center form-group">
         <button type="button" class="btn btn-default" data-dismiss="modal">{% trans 'Close' %}</button>
