@@ -2,7 +2,7 @@
 '''
 A template tag to ease creation of Bootstrap modal dialogs. Use this tag like:
 
-    {% bsmodal dialogTitle dialogId [close_title_button={Yes|No}] %}
+    {% bsmodal dialogTitle dialogId [close_title_button={Yes|No}] [header_bg_css=''] %}
         <dialog content goes here>
     {% endbsmodal %}
 
@@ -34,7 +34,7 @@ DIALOG_TEMPLATE = u"""
     <div class="modal fade" id="{0}" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-top" role="document">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header {4}">
                     {3}
                     <h4 class="modal-title">{1}</h4>
                 </div>
@@ -51,11 +51,13 @@ DIALOG_CLOSE_TITLE_BUTTON = u"""
     """
 
 class ModalDialog(template.Node):
-    def __init__(self, dialog_id, title, content_nodelist, close_title_button=True):
+    def __init__(self, dialog_id, title, content_nodelist, close_title_button=True,
+                header_bg_css=''):
         self.dialog_id = dialog_id
         self.title = template.Variable(title)
         self.content_nodelist = content_nodelist
         self.close_title_button = close_title_button
+        self.header_bg_css = header_bg_css
 
     def render(self, context):
         try:
@@ -66,7 +68,8 @@ class ModalDialog(template.Node):
                 self.dialog_id,
                 title,
                 self.content_nodelist.render(context),
-                DIALOG_CLOSE_TITLE_BUTTON if self.close_title_button else ''
+                DIALOG_CLOSE_TITLE_BUTTON if self.close_title_button else '',
+                self.header_bg_css
                 )
 
 
@@ -96,17 +99,16 @@ def bsmodal(parser, token):
     title = strip_quotes(contents[1])
     dialog_id = strip_quotes(contents[2]) if len(contents) > 2 else "modal"
     close_title_button = True
+    header_bg_css = ''
     # optional elements
     for i in range(3, len(contents)):
         option = strip_quotes(contents[i]).split('=')
         if option[0] == 'close_title_button':
            close_title_button = True if option[1] in ['True', 'Yes'] else False
+        elif option[0] == 'header_bg_css':
+            header_bg_css = option[1]
 
     nodelist = parser.parse(('endbsmodal',))
     parser.delete_first_token()
     return ModalDialog(
-            dialog_id,
-            title,
-            nodelist,
-            close_title_button
-            )
+        dialog_id, title, nodelist, close_title_button, header_bg_css)
