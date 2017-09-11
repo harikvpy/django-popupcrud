@@ -74,13 +74,16 @@ $(document).ready(function() {
         $('#delete-modal').modal('show');
         formAjaxSubmit('#delete-form', '#delete-modal', 
             function(xhr) {
+                var result = xhr.result;
                 $("#delete-result-modal #id_delete_result").html(xhr.message);
-                $('#delete-result-modal').on('hidden.bs.modal', function(xhr) {
-                    $('#delete-result-modal').off('hidden.bs.modal');
-                    if (xhr.result) {
+                $('#delete-result-modal').on('hidden.bs.modal', xhr.result ? 
+                    function(evtObj) { 
+                        $('#delete-result-modal').off('hidden.bs.modal');
                         location.reload();
-                    }
-                });
+                    } : 
+                    function(evtObj) { 
+                        $('#delete-result-modal').off('hidden.bs.modal');
+                    });
                 $('#delete-result-modal').modal('show');
             }
         );
