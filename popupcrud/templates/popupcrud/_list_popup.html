@@ -53,8 +53,10 @@ $(document).ready(function() {
     {# edit an object action handler #}
     $("a[name='edit_object']").click(function(evtObj) {
         evtObj.preventDefault();
-        $('#create-edit-modal .modal-body').load($(evtObj.target).parent('a').data('url'), function () {
-            $('#create-edit-modal .modal-title').text("{{ edit_item_dialog_title }}");
+        $('#create-edit-modal .modal-body').load(
+            $(evtObj.target).parent('a').data('url'), function () {
+            $('#create-edit-modal .modal-title').text(
+                "{{ edit_item_dialog_title }}");
             $('#create-edit-modal').modal('show');
             formAjaxSubmit('#create-edit-form', '#create-edit-modal', 
                 function(xhr) {
@@ -67,16 +69,18 @@ $(document).ready(function() {
         evtObj.preventDefault();
         $('#delete-modal #id_object_name').text(
             $(evtObj.target).parents('tr').children(':nth-child(1)').text());
-        $('#delete-modal .modal-body form').attr('action', $(evtObj.target).parent('a').data('url'));
+        $('#delete-modal .modal-body form').attr(
+            'action', $(evtObj.target).parent('a').data('url'));
         $('#delete-modal').modal('show');
         formAjaxSubmit('#delete-form', '#delete-modal', 
             function(xhr) {
-                $("#delete-result-modal #id_delete_result").html(
-                    xhr.message)
-                setTimeout(function() { 
-                    $('#delete-result-modal').modal('hide');
-                    location.reload();
-                }, 2000);
+                $("#delete-result-modal #id_delete_result").html(xhr.message);
+                $('#delete-result-modal').on('hidden.bs.modal', function(xhr) {
+                    $('#delete-result-modal').off('hidden.bs.modal');
+                    if (xhr.result) {
+                        location.reload();
+                    }
+                });
                 $('#delete-result-modal').modal('show');
             }
         );
