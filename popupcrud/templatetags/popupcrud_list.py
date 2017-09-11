@@ -73,7 +73,7 @@ def list_field_value(view, obj, field, context, index):
             # TODO: 2017年09月06日 (週三) 08時33分26秒
             #		We're instaintiating the viewset class for every field
             #       that is a method on the viewset class. NOT VERY GOOD!
-            value = getattr(view._viewset(), field)(obj)
+            value = getattr(view._viewset, field)(obj)
 
     if index==0 and 'edit_url' in context:
         detail_url = view._viewset.get_detail_url(obj)

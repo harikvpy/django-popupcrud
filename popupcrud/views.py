@@ -4,10 +4,13 @@
 from functools import update_wrapper
 
 from django.core.exceptions import ImproperlyConfigured
+from django.shortcuts import render_to_response
 from django.utils.decorators import classonlymethod
 from django.utils.translation import ugettext_lazy as _, ugettext
 from django.views import generic
 from django.http import JsonResponse
+from django.template import loader
+from django.contrib.auth.mixins import PermissionRequiredMixin
 
 from pure_pagination import PaginationMixin
 
@@ -49,6 +52,11 @@ class AjaxObjectFormMixin(object):
             return self.get_ajax_response()
         return retval
 
+    def handle_no_permission(self):
+        if self.request.is_ajax():
+            return render_to_response('popupcrud/403.html')
+        super(AjaxObjectFormMixin, self).handle_no_permission()
+
 
 class AttributeThunk(object):
     """
@@ -57,7 +65,8 @@ class AttributeThunk(object):
     passed as constructur argument.
     """
     def __init__(self, viewset, *args, **kwargs):
-        self._viewset = viewset
+        self._viewset = viewset()   # Sat 9/9, changed to store Viewset object
+                                    # instead of viewset class
         super(AttributeThunk, self).__init__(*args, **kwargs)
 
     @property
@@ -73,7 +82,8 @@ class AttributeThunk(object):
         return self._viewset.list_url
 
 
-class ListView(AttributeThunk, PaginationMixin, generic.ListView):
+class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
+               generic.ListView):
     """ Model list view """
 
     def __init__(self, viewset_cls, *args, **kwargs):
@@ -100,6 +110,9 @@ class ListView(AttributeThunk, PaginationMixin, generic.ListView):
         # determined by default -- <model>_list.html
         templates.append("popupcrud/list.html")
         return templates
+
+    def get_permission_required(self):
+        return self._viewset.get_permission_required('list')
 
     def get_context_data(self, **kwargs):
         context = super(ListView, self).get_context_data(**kwargs)
@@ -137,7 +150,7 @@ class TemplateNameMixin(object):
 
 
 class CreateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
-                 generic.CreateView):
+                 PermissionRequiredMixin, generic.CreateView):
 
     popupcrud_template_name = "form_template"
     form_template = "popupcrud/form.html"
@@ -150,14 +163,20 @@ class CreateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
         kwargs['form_url'] = self._viewset.new_url
         return super(CreateView, self).get_context_data(**kwargs)
 
+    def get_permission_required(self):
+        return self._viewset.get_permission_required('create')
 
-class DetailView(AttributeThunk, generic.DetailView):
+
+class DetailView(AttributeThunk, PermissionRequiredMixin, generic.DetailView):
     def __init__(self, viewset_cls, *args, **kwargs):
         super(DetailView, self).__init__(viewset_cls, *args, **kwargs)
 
+    def get_permission_required(self):
+        return self._viewset.get_permission_required('read')
+
 
 class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
-                 generic.UpdateView):
+                 PermissionRequiredMixin, generic.UpdateView):
 
     popupcrud_template_name = "form_template"
     form_template = "popupcrud/form.html"
@@ -170,11 +189,29 @@ class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
         kwargs['form_url'] = self._viewset.get_edit_url(self.object)
         return super(UpdateView, self).get_context_data(**kwargs)
 
+    def get_permission_required(self):
+        return self._viewset.get_permission_required('update')
 
-class DeleteView(AttributeThunk, generic.DeleteView):
+
+class DeleteView(AttributeThunk, PermissionRequiredMixin, generic.DeleteView):
 
     def __init__(self, viewset_cls, *args, **kwargs):
         super(DeleteView, self).__init__(viewset_cls, *args, **kwargs)
+
+    def handle_no_permission(self):
+        """
+        Slightly different form of handling no_permission from Create/Update
+        views. Delete ajax request expects a JSON response to its AJAX request
+        and therefore we render the 403 template and return the rendered context
+        as error message text.
+        """
+        if self.request.is_ajax():
+            temp = loader.get_template("popupcrud/403.html")
+            return JsonResponse({
+                'result': False,
+                'message': temp.render({}, self.request)
+            })
+        super(AjaxObjectFormMixin, self).handle_no_permission()
 
     def delete(self, request, *args, **kwargs):
         """ Override to return JSON success response for AJAX requests """
@@ -188,6 +225,9 @@ class DeleteView(AttributeThunk, generic.DeleteView):
             })
         else:
             return retval
+
+    def get_permission_required(self):
+        return self._viewset.get_permission_required('delete')
 
 
 class PopupCrudViewSet(object):
@@ -253,6 +293,11 @@ class PopupCrudViewSet(object):
     # form_class = None
     # list_url = None
     paginate_by = 10 # turn on pagination by default
+    list_permission_required = ()
+    create_permission_required = ()
+    read_permission_required = ()
+    update_permission_required = ()
+    delete_permission_required = ()
 
     @classonlymethod
     def generate_view(cls, crud_view_class, **initkwargs):
@@ -308,14 +353,40 @@ class PopupCrudViewSet(object):
     def delete(cls, **initkwargs):
         return cls.generate_view(DeleteView, **initkwargs)
 
-    @staticmethod
-    def get_detail_url(obj):
+    def get_detail_url(self, obj):
         return None
 
-    @staticmethod
-    def get_edit_url(obj):
+    def get_edit_url(self, obj):
         return "#"
 
-    @staticmethod
-    def get_delete_url(obj):
+    def get_delete_url(self, obj):
         return "#"
+
+    def get_permission_required(self, op):
+        """
+        Return the permission required for the CRUD operation specified in op.
+
+        Parameters:
+            op: {'list'|'create'|'read'|'update'|'delete'}, where
+
+                'list':= PopupCrudViewSet.list()
+                'create':= PopupCrudViewSet.create()
+                'read':= PopupCrudViewSet.detail()
+                'update':= PopupCrudViewSet.update()
+                'delete':= PopupCrudViewSet.delete()
+
+        Return:
+            The permission_required tuple for the specified operation
+
+        Remarks:
+            Default implementation returns an empty tuple, meaning that
+            none of the views require any permissions.
+        """
+        permission_table = {
+            'list': self.list_permission_required,
+            'create': self.create_permission_required,
+            'read': self.read_permission_required,
+            'update': self.update_permission_required,
+            'delete': self.delete_permission_required
+        }
+        return permission_table[op]

@@ -19,7 +19,7 @@
 {% trans 'Deleted' as deleted %}
 {% bsmodal deleted 'delete-result-modal' close_title_button=Yes %}
     <div id='id_delete_result'></div><br/>
-    <div class="form-group">
+    <div class="text-center form-group">
         <button type="button" class="btn btn-default" data-dismiss="modal">{% trans 'Close' %}</button>
     </div>
 {% endbsmodal %}
@@ -29,7 +29,7 @@ $(document).ready(function() {
         evtObj.preventDefault();
         $('#create-edit-modal .modal-body').load("{{ new_url }}", function () {
             $('#create-edit-modal .modal-title').text("{{ new_item_dialog_title }}");
-            $('#create-edit-modal').modal('toggle');
+            $('#create-edit-modal').modal('show');
             formAjaxSubmit('#create-edit-form', '#create-edit-modal', 
                 function(xhr) {
                     {% if related_field %}
@@ -50,41 +50,34 @@ $(document).ready(function() {
             });
     });
     {% if not related_field %}
-    {# edit a account action handler #}
+    {# edit an object action handler #}
     $("a[name='edit_object']").click(function(evtObj) {
         evtObj.preventDefault();
         $('#create-edit-modal .modal-body').load($(evtObj.target).parent('a').data('url'), function () {
             $('#create-edit-modal .modal-title').text("{{ edit_item_dialog_title }}");
-            $('#create-edit-modal').modal('toggle');
+            $('#create-edit-modal').modal('show');
             formAjaxSubmit('#create-edit-form', '#create-edit-modal', 
                 function(xhr) {
                     location.reload();
                 });
         });
     });
-    {# delete a account action handler #}
+    {# delete an object action handler #}
     $("a[name='delete_object']").click(function(evtObj) {
         evtObj.preventDefault();
         $('#delete-modal #id_object_name').text(
             $(evtObj.target).parents('tr').children(':nth-child(1)').text());
         $('#delete-modal .modal-body form').attr('action', $(evtObj.target).parent('a').data('url'));
-        $('#delete-modal').modal('toggle');
+        $('#delete-modal').modal('show');
         formAjaxSubmit('#delete-form', '#delete-modal', 
             function(xhr) {
-                if (xhr.result) {
-                    $("#delete-result-modal #id_delete_result").text(
-                        xhr.message)
-                    setTimeout(function() { 
-                        $('#delete-result-modal').modal('toggle');
-                        location.reload();
-                    }, 2000);
-                } else {
-                    $('#delete-result-modal #id_delete_result').text("{% trans 'Account not deleted!' %}");
-                    setTimeout(function() { 
-                        $('#delete-result-modal').modal('toggle');
-                    }, 2000);
-                }
-                $('#delete-result-modal').modal('toggle');
+                $("#delete-result-modal #id_delete_result").html(
+                    xhr.message)
+                setTimeout(function() { 
+                    $('#delete-result-modal').modal('hide');
+                    location.reload();
+                }, 2000);
+                $('#delete-result-modal').modal('show');
             }
         );
     });
@@ -111,7 +104,7 @@ var formAjaxSubmit = function(form, modal, complete) {
                     $(modal).find('.block-content').html(xhr);
                     formAjaxSubmit(form, modal, complete);
                 } else {
-                    $(modal).modal('toggle');
+                    $(modal).modal('hide');
                     if (typeof complete == "function") {
                         complete(xhr); // notify caller
                     }

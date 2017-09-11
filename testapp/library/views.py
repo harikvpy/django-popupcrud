@@ -64,17 +64,19 @@ class AuthorCrudViewset(PopupCrudViewSet):
     list_display = ('name', 'penname', 'age', 'double_age', 'half_age')
     list_url = reverse_lazy("library:writers-list")
     new_url = reverse_lazy("library:new-writer")
+    list_permission_required = ('library.add_author',)
+    create_permission_required = ('library.add_author',)
+    update_permission_required = ('library.change_author',)
+    delete_permission_required = ('library.delete_author',)
 
     def half_age(self, author):
         return author.age/2
     half_age.label = "Half life"
 
-    @staticmethod
-    def get_edit_url(obj):
+    def get_edit_url(self, obj):
         return reverse_lazy("library:edit-writer", kwargs={'pk': obj.pk})
 
-    @staticmethod
-    def get_delete_url(obj):
+    def get_delete_url(self, obj):
         return reverse_lazy("library:delete-writer", kwargs={'pk': obj.pk})
 
 
