@@ -3,6 +3,7 @@
 
 from functools import update_wrapper
 
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import render_to_response
 from django.utils.decorators import classonlymethod
@@ -80,6 +81,11 @@ class AttributeThunk(object):
     @property
     def success_url(self):
         return self._viewset.list_url
+
+    def get_context_data(self, **kwargs):
+        kwargs['base_template'] = getattr(
+            settings, 'POPUPCRUD_BASE_TEMPLATE', 'base.html')
+        return super(AttributeThunk, self).get_context_data(**kwargs)
 
 
 class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
