@@ -206,7 +206,7 @@ class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
     def get_form_class(self):
         if hasattr(self._viewset, 'form_class'):
             return self._viewset.form_class
-        return super(CreateView, self).get_form_class()
+        return super(UpdateView, self).get_form_class()
 
 
 class DeleteView(AttributeThunk, PermissionRequiredMixin, generic.DeleteView):
