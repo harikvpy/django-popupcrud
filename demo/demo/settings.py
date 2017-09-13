@@ -132,8 +132,8 @@ STATIC_URL = '/static/'
 
 # for livereload to work
 INTERNAL_IPS = ['127.0.0.1', '10.0.3.2', '192.168.225.101', '192.168.225.1']
-INSTALLED_APPS = ['livereload'] + INSTALLED_APPS
-MIDDLEWARE += ['livereload.middleware.LiveReloadScript']
+#INSTALLED_APPS = ['livereload'] + INSTALLED_APPS
+#MIDDLEWARE += ['livereload.middleware.LiveReloadScript']
 import socket
 if socket.gethostname() == 'kaveri':
     LIVERELOAD_HOST = '192.168.225.101'
