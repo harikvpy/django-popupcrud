@@ -30,13 +30,13 @@ Quickstart
 
 2. Add ``popupcrud`` to your INSTALLED_APPS in settings.py::
 
-   INSTALLED_APPS = [
-       ...
-       'bootstrap3',
-       'pure_pagination',
-       'popupcrud',
-       ...
-   ]
+       INSTALLED_APPS = [
+           ...
+           'bootstrap3',
+           'pure_pagination',
+           'popupcrud',
+           ...
+       ]
 
 3. In your app's ``views.py``, create a ``ViewSet`` for each model for which you
    want to support CRUD operations.
