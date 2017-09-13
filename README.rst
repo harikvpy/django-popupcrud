@@ -28,7 +28,8 @@ Quickstart
    Alternatively, you can clone this repository and install from the repo root
    folder via ``pip install -e .``.
 
-2. Add ``popupcrud`` to your INSTALLED_APPS in settings.py::
+2. Add ``popupcrud`` and its dependencies to INSTALLED_APPS in your project's
+   settings.py::
 
        INSTALLED_APPS = [
            ...
@@ -90,3 +91,7 @@ Quickstart
    PopupCrudViewSet has many options to customize the fields displayed in list
    view, form used for create/update operations, permission control and more.
 
+
+License
+-------
+Distributed under MIT License. See `LICENSE<LICENSE>`_ file for details.
