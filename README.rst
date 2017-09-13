@@ -7,9 +7,8 @@ operations through HTML popups.
 
 **Under active development. Not ready for public consumption.**
 
-============
 Requirements
-============
+------------
 
 - Python 2.7
 - Django >= 1.8
@@ -29,18 +28,20 @@ Quickstart
    Alternatively, you can clone this repository and install from the repo root
    folder via ``pip install -e .``.
 
-2. Add ``popupcrud`` to your INSTALLED_APPS in settings.py:
+2. Add ``popupcrud`` to your INSTALLED_APPS in settings.py::
 
-   ``INSTALLED_APPS = [
+   INSTALLED_APPS = [
        ...
-       popupcrud,
+       'bootstrap3',
+       'pure_pagination',
+       'popupcrud',
        ...
-   ]``
+   ]
 
 3. In your app's ``views.py``, create a ``ViewSet`` for each model for which you
    want to support CRUD operations.
 
-   In the app's models.py::
+   Models.py::
 
     from django.db import models
 
@@ -57,7 +58,7 @@ Quickstart
         def __str__(self):
             return self.name
 
-   In the app's, views.py::
+   Views.py::
 
     from popupcrud.views import PopupCrudViewSet
 
@@ -78,8 +79,8 @@ Quickstart
    namespace::
 
     urlpatterns= [
-        url(r'^authors', views.AuthorCrudViewset.list(), name='authors'),
-        url(r'^authors', views.AuthorCrudViewset.create(), name='new-author'),
+        url(r'^authors/$', views.AuthorCrudViewset.list(), name='authors'),
+        url(r'^authors/new/$', views.AuthorCrudViewset.create(), name='new-author'),
         url(r'^authors(?P<pk>\d+)/edit/$', views.AuthorCrudViewset.update(), name='edit-author'),
         url(r'^authors(?P<pk>\d+)/delete/$', views.AuthorCrudViewset.delete(), name='delete-author'),
         ]
