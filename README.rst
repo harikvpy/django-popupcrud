@@ -42,6 +42,7 @@ Quickstart
    want to support CRUD operations.
 
    Models.py::
+    
 
     from django.db import models
 
@@ -66,8 +67,8 @@ Quickstart
         model = Author
         fields = ('name', 'penname', 'age')
         list_display = ('name', 'penname', 'age')
-        list_url = reverse_lazy("library:writers-list")
-        new_url = reverse_lazy("library:new-writer")
+        list_url = reverse_lazy("library:authors")
+        new_url = reverse_lazy("library:new-author")
 
         def get_edit_url(self, obj):
             return reverse_lazy("library:edit-author", kwargs={'pk': obj.pk})
