@@ -94,4 +94,5 @@ Quickstart
 
 License
 -------
-Distributed under MIT License. See `LICENSE`_ file for details.
+Distributed under MIT License. See `LICENSE
+<LICENSE>`_ file for details.
