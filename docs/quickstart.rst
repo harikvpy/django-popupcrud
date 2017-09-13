@@ -47,7 +47,7 @@ Quickstart
 
     from popupcrud.views import PopupCrudViewSet
 
-    AuthorViewSet(PopupCrudViewSet):
+    class AuthorViewSet(PopupCrudViewSet):
         model = Author
         fields = ('name', 'penname', 'age')
         list_display = ('name', 'penname', 'age')
