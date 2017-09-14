@@ -5,7 +5,11 @@ django-popupcrud
 A CRUD framework leveraging Django's generic views that implements CRUD 
 operations through HTML popups.
 
-**Under active development. Not ready for public consumption.**
+Documentation available at `django-popupcrud.readthedocs.io 
+<http://django-popupcrud.readthedocs.io/en/latest/index.html>`_.
+
+**Under active development. Though the basic features work, formal tests are
+yet to added and therefore use it at your own risk.**
 
 Requirements
 ------------
