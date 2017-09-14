@@ -109,7 +109,7 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
 
         # if the viewset customized listview template, make sure that is
         # looked for first by putting its name in the front of the list
-        if hasattr(self._viewset, 'list_template'):
+        if getattr(self._viewset, 'list_template', None):
             templates.insert(0, self._viewset.list_template)
 
         # make the default template of lower priority than the one
@@ -118,7 +118,7 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
         return templates
 
     def get_permission_required(self):
-        return self._viewset.get_permission_required('list')
+        return self._viewset._get_permission_required('list')
 
     def get_context_data(self, **kwargs):
         context = super(ListView, self).get_context_data(**kwargs)
@@ -170,10 +170,10 @@ class CreateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
         return super(CreateView, self).get_context_data(**kwargs)
 
     def get_permission_required(self):
-        return self._viewset.get_permission_required('create')
+        return self._viewset._get_permission_required('create')
 
     def get_form_class(self):
-        if hasattr(self._viewset, 'form_class'):
+        if getattr(self._viewset, 'form_class', None):
             return self._viewset.form_class
         return super(CreateView, self).get_form_class()
 
@@ -183,7 +183,7 @@ class DetailView(AttributeThunk, PermissionRequiredMixin, generic.DetailView):
         super(DetailView, self).__init__(viewset_cls, *args, **kwargs)
 
     def get_permission_required(self):
-        return self._viewset.get_permission_required('read')
+        return self._viewset._get_permission_required('read')
 
 
 class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
@@ -201,10 +201,10 @@ class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
         return super(UpdateView, self).get_context_data(**kwargs)
 
     def get_permission_required(self):
-        return self._viewset.get_permission_required('update')
+        return self._viewset._get_permission_required('update')
 
     def get_form_class(self):
-        if hasattr(self._viewset, 'form_class'):
+        if getattr(self._viewset, 'form_class', None):
             return self._viewset.form_class
         return super(UpdateView, self).get_form_class()
 
@@ -243,38 +243,16 @@ class DeleteView(AttributeThunk, PermissionRequiredMixin, generic.DeleteView):
             return retval
 
     def get_permission_required(self):
-        return self._viewset.get_permission_required('delete')
+        return self._viewset._get_permission_required('delete')
 
 
 class PopupCrudViewSet(object):
     """
-    Base class to create CRUD views for a model.
+    This is the base class from which you derive a class in your project
+    for each model that you need to build CRUD views for.
+    """
 
-    To use:
-
-    1. Instantiate a child class of this for your model for which you wish
-    to build crud views.
-
-    2. Provide the following in the derived class:
-
-        Required:
-
-            Properties:
-                model: model name to provide crud views for
-                list_display: fields to be included in the list view columns (a la
-                    ModelAdmin.list_display, though not supporting all its flavors)
-                fields: fields to be included in the form
-                list_url: the list view url to redirect to after a successful
-                    add/edit/delete operation.
-                new_url: URL to the CRUD create view for creating a new object.
-
-            Methods:
-                get_edit_url(obj): staticmethod. Return the url to the edit
-                    object view.
-                get_delete_url: staticmethod. Return the url to the CRUD delete
-                    object view. Object is deleted using AJAX after user
-                    confirmation which is displayed as a popup.
-
+    """
         Optional:
 
             Class Properties:
@@ -304,19 +282,71 @@ class PopupCrudViewSet(object):
             url(r'mymodel/(?P<pk>\d+)/delete/$', MyModelViewset.delete(), name='delete-mymodel'),
             ]
     """
-    # model = None
-    # fields = ()
-    # form_class = None
-    # list_url = None
+
+    #: The model to build CRUD views for. This is a required attribute.
+    model = None
+
+    #: URL to the create view for creating a new object. This is a required
+    #: attribute.
+    new_url = None
+
+    #: Lists the fields to be displayed in the list view columns. This attribute
+    #: is modelled after ModelAdmin.list_display and supports model methods as
+    #: as ViewSet methods much like ModelAdmin. This is a required attribute.
+    list_display = ()
+
+    #: A list of names of fields. This is interpreted the same as the Meta.fields
+    #: attribute of ModelForm. This is a required attribute.
+    fields = ()
+
+    #: The form class to instantiate for Create and Update views. This is optional
+    #: and if not specified a ModelForm using the values of fields attribute will
+    #: be instantiated. An optional attribute, if specified, overrides fields
+    #: attribute value.
+    form_class = None
+
+    #: The url where the list view is rooted. This will be used as the success_url
+    #: attribute value for the individual CRUD views. This is a required attribute.
+    list_url = None
+
+    #: Number of entries per page in list view. Defaults to 10. Setting this
+    #: to None will disable pagination. This is an optional attribute.
     paginate_by = 10 # turn on pagination by default
+
+    #: List of permission names for the list view. Permission names are of the
+    #: same format as what is specified in permission_required() decorator.
+    #: Defaults to no permissions, meaning no permission is required.
     list_permission_required = ()
+
+    #: List of permission names for the create view.
+    #: Defaults to no permissions, meaning no permission is required.
     create_permission_required = ()
+
+    #: List of permission names for the detail view.
+    #: Defaults to no permissions, meaning no permission is required.
     read_permission_required = ()
+
+    #: List of permission names for the update view.
+    #: Defaults to no permissions, meaning no permission is required.
     update_permission_required = ()
+
+    #: List of permission names for the delete view.
+    #: Defaults to no permissions, meaning no permission is required.
     delete_permission_required = ()
 
+    #: The template file to use for list view. If not specified, defaults
+    #: to the internal template.
+    list_template = None
+
+    #: The template file to use for create view. If not specified, defaults
+    #: to the internal template.
+    #create_template: template to use for create new object view
+    #edit_template: template to use for editing an existing object view
+    #detail_template: template to use for detail view
+    #delete_template: template to use for delete view
+
     @classonlymethod
-    def generate_view(cls, crud_view_class, **initkwargs):
+    def _generate_view(cls, crud_view_class, **initkwargs):
         """
         A closure that generates the view function by instantiating the view
         class specified in argument 2. This is a generalized function that is
@@ -351,34 +381,62 @@ class PopupCrudViewSet(object):
 
     @classonlymethod
     def list(cls, **initkwargs):
-        return cls.generate_view(ListView, **initkwargs)
+        """Returns the list view that can be specified as the second argument
+        to url() in urls.py.
+        """
+        return cls._generate_view(ListView, **initkwargs)
 
     @classonlymethod
     def create(cls, **initkwargs):
-        return cls.generate_view(CreateView, **initkwargs)
+        """Returns the create view that can be specified as the second argument
+        to url() in urls.py.
+        """
+        return cls._generate_view(CreateView, **initkwargs)
 
     @classonlymethod
     def read(cls, **initkwargs):
-        return cls.generate_view(DetailView, **initkwargs)
+        """Returns the create view that can be specified as the second argument
+        to url() in urls.py.
+        """
+        return cls._generate_view(DetailView, **initkwargs)
 
     @classonlymethod
     def update(cls, **initkwargs):
-        return cls.generate_view(UpdateView, **initkwargs)
+        """Returns the update view that can be specified as the second argument
+        to url() in urls.py.
+        """
+        return cls._generate_view(UpdateView, **initkwargs)
 
     @classonlymethod
     def delete(cls, **initkwargs):
-        return cls.generate_view(DeleteView, **initkwargs)
+        """Returns the delete view that can be specified as the second argument
+        to url() in urls.py.
+        """
+        return cls._generate_view(DeleteView, **initkwargs)
 
     def get_detail_url(self, obj):
+        """ Override this returning the URL where PopupCrudViewSet.detail() is
+        placed in the URL namespace such that ViewSet can generate the
+        appropriate href to the item detail hyperlink in list view.
+        argument.
+        """
         return None
 
     def get_edit_url(self, obj):
+        """ Override this returning the URL where PopupCrudViewSet.update() is
+        placed in the URL namespace such that ViewSet can generate the
+        appropriate href to the item edit hyperlink in list view.
+        """
         return "#"
 
     def get_delete_url(self, obj):
+        """ Override this returning the URL where PopupCrudViewSet.delete() is
+        placed in the URL namespace such that ViewSet can generate the
+        appropriate href to the item delete hyperlink in list view.
+        """
         return "#"
 
-    def get_permission_required(self, op):
+    def _get_permission_required(self, op):
         """
         Return the permission required for the CRUD operation specified in op.
 
