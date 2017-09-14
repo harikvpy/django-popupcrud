@@ -1,30 +1,38 @@
 # coding: utf-8
-'''
-A template tag to ease creation of Bootstrap modal dialogs. Use this tag like:
+"""
+A tag to help creation of Bootstrap modal dialogs. You may use this tag as:
 
-    {% bsmodal dialogTitle dialogId [close_title_button={Yes|No}] [header_bg_css=''] %}
-        <dialog content goes here>
-    {% endbsmodal %}
+    .. code:: django
 
-This would create a hidden dialog with title dialogTitle and id dialogId.
-dialogTitle can be a template variable (for eg created with
-{% trans 'something' as var %}) or a string literal. dialogId is expected to be
-a string literal. This cane be enclosed in a pair of quotes as is the norm
-for string literals or can be written as it is.
+        {% bsmodal dialogTitle dialogId [close_title_button={Yes|No}] [header_bg_css=''] %}
+            <dialog content goes here>
+        {% endbsmodal %}
+
+This would create a hidden dialog with title ``dialogTitle`` and id ``dialogId``.
+``dialogTitle`` can be a template variable (for eg created with
+``{% trans 'something' as var %}``) or a string literal. ``dialogId`` is
+expected to be a string literal. Quotes are optional for string literal values.
 
 The content of the dialog body is to be written between the pair of tags
-bsmodal and endbsmodal.
+``{% bsmodal %}`` and ``{% endbsmodal %}``.
 
 This would result in the html fragment
-    <div class="modal fade"...>
-        <div class="modal-content">
-            <div class="modal-header">
-            </div>
-            <div class="modal-body">
+
+    .. code:: html
+
+        <div class="modal fade"...>
+            <div class="modal-content">
+                <div class="modal-header">
+                </div>
+                <div class="modal-body">
+                    <..content between bsmodal & endbsmodal tags..>
+                </div>
             </div>
         </div>
-    </div>
-'''
+
+Refer to Boostrap `documentation <https://getbootstrap.com/docs/3.3/javascript/#modals>`_ on modals for more information on how to show
+and hide the modal windows.
+"""
 
 from django import template
 

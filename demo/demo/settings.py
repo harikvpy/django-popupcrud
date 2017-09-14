@@ -138,4 +138,6 @@ import socket
 if socket.gethostname() == 'kaveri':
     LIVERELOAD_HOST = '192.168.225.101'
 
-POPUPCRUD_BASE_TEMPLATE = 'base.html'
+POPUPCRUD = {
+    'base_template': 'base.html'
+}

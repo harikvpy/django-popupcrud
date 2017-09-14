@@ -15,6 +15,15 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 
 from pure_pagination import PaginationMixin
 
+# default settings
+POPUPCRUD_DEFAULTS = {
+    'base_template': 'base.html'
+}
+
+# build effective settings by merging any user settings with defaults
+POPUPCRUD = POPUPCRUD_DEFAULTS.copy()
+POPUPCRUD.update(getattr(settings, 'POPUPCRUD', {}))
+
 class AjaxObjectFormMixin(object):
     """
     Mixin facilitates single object create/edit/delete functions to be
@@ -83,8 +92,7 @@ class AttributeThunk(object):
         return self._viewset.list_url
 
     def get_context_data(self, **kwargs):
-        kwargs['base_template'] = getattr(
-            settings, 'POPUPCRUD_BASE_TEMPLATE', 'base.html')
+        kwargs['base_template'] = POPUPCRUD['base_template']
         return super(AttributeThunk, self).get_context_data(**kwargs)
 
 
