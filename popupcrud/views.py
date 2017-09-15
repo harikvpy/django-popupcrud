@@ -134,7 +134,6 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
         context['new_button_text'] = ugettext("New {0}").format(
             self._viewset.model._meta.verbose_name)
         context['new_url'] = getattr(self._viewset, 'new_url', None)
-        context['edit_url'] = getattr(self._viewset, 'edit_url', None)
         context['new_item_dialog_title'] = ugettext("New {0}").format(
             self.model._meta.verbose_name)
         context['edit_item_dialog_title'] = ugettext("Edit {0}").format(

@@ -23,13 +23,15 @@ This would create a hidden dialog with title ``dialogTitle`` and id ``dialogId``
 The content of the dialog body is to be written between the pair of tags
 ``{% bsmodal %}`` and ``{% endbsmodal %}``.
 
-This would result in the html fragment
+The final rendered html fragment would look like this:
 
     .. code:: html
 
-        <div class="modal fade"...>
+        <div class="modal fade" tabindex="-1" role="dialog">
             <div class="modal-content">
                 <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">{{dialogTitle}}</h4>
                 </div>
                 <div class="modal-body">
                     <..content between bsmodal & endbsmodal tags..>
