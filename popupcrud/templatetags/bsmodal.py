@@ -8,11 +8,18 @@ A tag to help creation of Bootstrap modal dialogs. You may use this tag as:
             <dialog content goes here>
         {% endbsmodal %}
 
-This would create a hidden dialog with title ``dialogTitle`` and id ``dialogId``.
-``dialogTitle`` can be a template variable (for eg created with
-``{% trans 'something' as var %}``) or a string literal. ``dialogId`` is
-expected to be a string literal. Quotes are optional for string literal values.
+    :dialogTitle: Required. The title of the modal window. This can be a template
+        variable (created with ``{% trans 'something' as var %}``) or a
+        string literal.
+    :dialogId: Required. The id of the modal window specified as string literal.
+    :close_title_button: Optional. A flag indicating whether to show the modal
+        window close button on the titlebar. Specify one of ``Yes`` or ``No``.
+    :header_bg_css: Optional. A css class for the header background. Defaults to
+        no style which results in a title with the same background color as the
+        rest of the modal window.
 
+
+This would create a hidden dialog with title ``dialogTitle`` and id ``dialogId``.
 The content of the dialog body is to be written between the pair of tags
 ``{% bsmodal %}`` and ``{% endbsmodal %}``.
 
