@@ -52,7 +52,7 @@ class AjaxObjectFormMixin(object):
 
     def get_ajax_response(self):
         return JsonResponse({
-            'name': unicode(self.object), # object representation
+            'name': str(self.object), # object representation
             'pk': self.object.pk          # object id
         })
 
@@ -244,7 +244,7 @@ class DeleteView(AttributeThunk, PermissionRequiredMixin, generic.DeleteView):
                 'result': True,
                 'message': ugettext("{0} {1} deleted").format(
                     self.model._meta.verbose_name,
-                    unicode(self.object))
+                    str(self.object))
             })
         else:
             return retval

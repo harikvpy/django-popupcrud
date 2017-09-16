@@ -26,7 +26,8 @@ class PopupCrudViewSetTests(TestCase):
             r'<div class="modal fade".*id="delete-result-modal"',
         ]
         for pattern in modal_patterns:
-            self.assertTrue(re.search(pattern, response.content))
+            self.assertTrue(re.search(pattern,
+                                      response.content.decode('utf-8')))
 
     def test_list_display(self):
         Author.objects.create(name="John", age=25)
@@ -68,7 +69,7 @@ class PopupCrudViewSetTests(TestCase):
         url = reverse("new-author")
         response = self.client.get(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         match = re.search(RE_CREATE_EDIT_FORM.format(url),
-                          response.content, re.DOTALL)
+                          response.content.decode('utf-8'), re.DOTALL)
         self.assertEqual(match.pos, 0)
 
     def test_update_form_template(self):
@@ -77,7 +78,7 @@ class PopupCrudViewSetTests(TestCase):
         url = reverse("edit-author", kwargs={'pk': john.pk})
         response = self.client.get(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         match = re.search(RE_CREATE_EDIT_FORM.format(url),
-                          response.content, re.DOTALL)
+                          response.content.decode('utf-8'), re.DOTALL)
         self.assertEqual(match.pos, 0)
 
     def test_create(self):
@@ -87,7 +88,7 @@ class PopupCrudViewSetTests(TestCase):
             data={'name': 'John', 'age': 55},
             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         john = Author.objects.get(name='John', age=55)
-        result = json.loads(response.content)
+        result = json.loads(response.content.decode('utf-8'))
         self.assertEquals(result, {'name': 'John', 'pk': john.pk})
 
     def test_update(self):
@@ -97,7 +98,7 @@ class PopupCrudViewSetTests(TestCase):
             url,
             data={'name': 'Peter', 'age': 35},
             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        result = json.loads(response.content)
+        result = json.loads(response.content.decode('utf-8'))
         self.assertEquals(result, {'name': 'Peter', 'pk': john.pk})
         john.refresh_from_db()
         self.assertEquals(john.name, 'Peter')
