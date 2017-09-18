@@ -1,10 +1,10 @@
 {% extends base_template %}
-{% load i18n bootstrap3 bsmodal popupcrud_list %}
+{% load i18n bootstrap3 popupcrud_list %}
 {% block content %}
 {% block create_new %}
 {% if new_url %}
 <div>
-    {% bootstrap_button button_type="link" button_class="btn btn-primary" content=new_button_text href="javascript:void(0);" name="btn_create_new" %}
+    <a class="btn btn-primary" href="javascript:void(0);" name="create_edit_object" type="link" data-url="{{ new_url }}" data-title="{{ new_button_text }}">{{ new_button_text }}</a>
 </div>
 {% endif %}
 {% endblock create_new %}

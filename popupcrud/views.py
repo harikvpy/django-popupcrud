@@ -12,8 +12,12 @@ from django.views import generic
 from django.http import JsonResponse
 from django.template import loader
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django import forms
 
 from pure_pagination import PaginationMixin
+
+from .widgets import RelatedFieldPopupFormWidget
+
 
 # default settings
 POPUPCRUD_DEFAULTS = {
@@ -55,6 +59,28 @@ class AjaxObjectFormMixin(object):
             'name': str(self.object), # object representation
             'pk': self.object.pk          # object id
         })
+
+    # following two methods are applicable only to Create/Edit views
+    def get_form_class(self):
+        if getattr(self._viewset, 'form_class', None):
+            return self._viewset.form_class
+        return super(AjaxObjectFormMixin, self).get_form_class()
+
+    def get_form(self, form_class=None):
+        form = super(AjaxObjectFormMixin, self).get_form(form_class)
+        if not getattr(self._viewset, 'form_class', None):
+            self._init_related_fields(form)
+        return form
+
+    def _init_related_fields(self, form):
+        related_popups  = getattr(self._viewset, 'related_popups', {})
+        for fname in related_popups:
+            if fname in form.fields:
+                field = form.fields[fname]
+                if isinstance(form.fields[fname], forms.ModelChoiceField):
+                    form.fields[fname].widget = RelatedFieldPopupFormWidget(
+                        widget=forms.Select(choices=form.fields[fname].choices),
+                        new_url=related_popups[fname])
 
     def form_valid(self, form): # pylint: disable=missing-docstring
         retval = super(AjaxObjectFormMixin, self).form_valid(form)
@@ -178,10 +204,10 @@ class CreateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
     def get_permission_required(self):
         return self._viewset._get_permission_required('create')
 
-    def get_form_class(self):
-        if getattr(self._viewset, 'form_class', None):
-            return self._viewset.form_class
-        return super(CreateView, self).get_form_class()
+    # def get_form_class(self):
+    #     if getattr(self._viewset, 'form_class', None):
+    #         return self._viewset.form_class
+    #     return super(CreateView, self).get_form_class()
 
 
 class DetailView(AttributeThunk, PermissionRequiredMixin, generic.DetailView):
@@ -209,10 +235,10 @@ class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
     def get_permission_required(self):
         return self._viewset._get_permission_required('update')
 
-    def get_form_class(self):
-        if getattr(self._viewset, 'form_class', None):
-            return self._viewset.form_class
-        return super(UpdateView, self).get_form_class()
+    # def get_form_class(self):
+    #     if getattr(self._viewset, 'form_class', None):
+    #         return self._viewset.form_class
+    #     return super(UpdateView, self).get_form_class()
 
 
 class DeleteView(AttributeThunk, PermissionRequiredMixin, generic.DeleteView):

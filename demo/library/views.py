@@ -50,6 +50,9 @@ class BookCrudViewset(PopupCrudViewSet):
     list_url = reverse_lazy("library:books")
     new_url = reverse_lazy("library:new-book")
     paginate_by = None # disable pagination
+    related_popups = {
+        'author': reverse_lazy("library:new-author")
+    }
 
     @staticmethod
     def get_edit_url(obj):

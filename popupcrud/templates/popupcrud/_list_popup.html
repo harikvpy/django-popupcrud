@@ -23,12 +23,20 @@
         <button type="button" class="btn btn-default" data-dismiss="modal">{% trans 'Close' %}</button>
     </div>
 {% endbsmodal %}
+{% bsmodal 'Create Related Object' 'create-related-modal' close_title_button=Yes header_bg_css=bg-primary %}
+    {# modal body will be filled in by jQuery.load(<new_object_url>) return value #}
+    <h3>Placeholder for create-related-object form</h3>
+{% endbsmodal %}
 <script type="text/javascript" charset="utf-8">
 $(document).ready(function() {
-    $("[name=btn_create_new]").click(function(evtObj) {
+    // same handler for New Object and Edit Object
+    $("[name=create_edit_object]").click(function(evtObj) {
         evtObj.preventDefault();
-        $('#create-edit-modal .modal-body').load("{{ new_url }}", function () {
-            $('#create-edit-modal .modal-title').text("{{ new_item_dialog_title }}");
+        var url = $(this).data('url');
+        var title = $(this).data('title');
+        $('#create-edit-modal .modal-body').load(url, function () {
+            $('#create-edit-modal .modal-title').text(title);
+            bindAddRelated();
             $('#create-edit-modal').modal('show');
             formAjaxSubmit('#create-edit-form', '#create-edit-modal', 
                 function(xhr) {
@@ -50,20 +58,6 @@ $(document).ready(function() {
             });
     });
     {% if not related_field %}
-    {# edit an object action handler #}
-    $("a[name='edit_object']").click(function(evtObj) {
-        evtObj.preventDefault();
-        $('#create-edit-modal .modal-body').load(
-            $(evtObj.target).parent('a').data('url'), function () {
-            $('#create-edit-modal .modal-title').text(
-                "{{ edit_item_dialog_title }}");
-            $('#create-edit-modal').modal('show');
-            formAjaxSubmit('#create-edit-form', '#create-edit-modal', 
-                function(xhr) {
-                    location.reload();
-                });
-        });
-    });
     {# delete an object action handler #}
     $("a[name='delete_object']").click(function(evtObj) {
         evtObj.preventDefault();
@@ -89,6 +83,37 @@ $(document).ready(function() {
         );
     });
     {% endif %}
+    var bindAddRelated = function() {
+        $(".add-another").click(function(evtObj) {
+            var url = $(this).data('url');
+            var title = $(this).text();
+            var select = $(this).prev('select');
+            $('#create-related-modal .modal-body').load(url, function () {
+                $('#create-related-modal .modal-title').text(title);
+                $('#create-related-modal').modal('show');
+                formAjaxSubmit('#create-related-modal #create-edit-form', '#create-related-modal', 
+                    function(xhr) {
+                        $(select).append($("<option></option>").
+                            attr("value", xhr.pk).text(xhr.name)).val(xhr.pk).trigger('change');
+                    })
+                });
+        });
+    }
+    /* Adjusts the just activated modal window's z-index to a value higher 
+       than the previously activated modal window's z-index. This will 
+       ensure that each newly activated modal is layered on top of all 
+       previously activated modals achieving the layered dialog effect.
+       
+       Code borrowed from: http://jsfiddle.net/CxdUQ/
+    */
+    $(document).on('show.bs.modal', '.modal', function (event) {
+        // calculate z-index as a function of number of visible modal windows.
+        var zIndex = 1040 + (10 * $('.modal:visible').length);
+        $(this).css('z-index', zIndex);
+        setTimeout(function() {
+            $('.modal-backdrop').not('.modal-stack').css('z-index', zIndex - 1).addClass('modal-stack');
+        }, 0);
+    });
 });
 /* A simple function that uses jQuery to submit a form using AJAX 
 
