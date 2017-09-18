@@ -11,8 +11,8 @@ yet to added and therefore use it at your own risk.**
 Requirements
 ------------
 
-- Python 2.7
-- Django >= 1.8
+- Python 2.7, 3.4
+- Django >= 1.9
 - django-bootstrap3
 - django-pure-pagination
 

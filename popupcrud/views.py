@@ -87,8 +87,7 @@ class AttributeThunk(object):
     def fields(self):
         return self._viewset.fields
 
-    @property
-    def success_url(self):
+    def get_success_url(self):
         return self._viewset.list_url
 
     def get_context_data(self, **kwargs):
