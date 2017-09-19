@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load i18n bootstrap3 %}
+{% block extrahead %}
+{{ form.media.css }}
+{{ form.media.js }}
+{% endblock extrahead %}
+{% block content %}
+<form action="" method="post" accept-charset="utf-8">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    {% trans "Save" as submit %}
+    {% bootstrap_button submit button_type="submit" button_class="btn-primary" %}
+</form>
+{% endblock content %}

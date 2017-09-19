@@ -34,3 +34,6 @@ class RelatedFieldPopupFormWidget(RelatedFieldWidgetWrapper):
         output.append(u'<small>%s</small></a>' % ugettext('New {0}').\
                       format(camel_case_to_spaces(name).title()))
         return mark_safe(u''.join(output))
+
+    class Media:
+        js = ('popupcrud/js/popupcrud.js',)

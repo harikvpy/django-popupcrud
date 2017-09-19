@@ -11,4 +11,8 @@ urlpatterns = [
     url(r'^books/new/$', views.BookCrudViewset.create(), name='new-book'),
     url(r'^books/(?P<pk>\d+)/edit/$', views.BookCrudViewset.update(), name='edit-book'),
     url(r'^books/(?P<pk>\d+)/delete/$', views.BookCrudViewset.delete(), name='delete-book'),
+
+    url(r'^rating/author/$', views.AuthorRatingView.as_view(), name='author-rating'),
+    url(r'^rating/book/$', views.BookRatingView.as_view(), name='book-rating'),
+    url(r'^mro/$', views.MultipleRelatedObjectDemoView.as_view(), name='multi-related-object-demo'),
 ]

@@ -26,6 +26,7 @@ class Author(models.Model):
         return self.age*2
     double_age.label = "Double Age"
 
+
 @python_2_unicode_compatible
 class Book(models.Model):
     title = models.CharField(_("Title"), max_length=128)
@@ -38,3 +39,42 @@ class Book(models.Model):
 
     def __str__(self):
         return self.title
+
+
+@python_2_unicode_compatible
+class AuthorRating(models.Model):
+    author = models.ForeignKey(Author)
+    rating = models.CharField("Rating", max_length=1, choices=(
+        ('1', '1 Star'),
+        ('2', '2 Stars'),
+        ('3', '3 Stars'),
+        ('4', '4 Stars'),
+    ))
+
+    class Meta:
+        ordering = ('author',)
+        verbose_name = "Author Rating"
+        verbose_name = "Author Ratings"
+
+    def __str__(self):
+        return "%s - %s" % (self.author.name, self.rating)
+
+
+@python_2_unicode_compatible
+class BookRating(models.Model):
+    book = models.ForeignKey(Book)
+    rating = models.CharField("Rating", max_length=1, choices=(
+        ('1', '1 Star'),
+        ('2', '2 Stars'),
+        ('3', '3 Stars'),
+        ('4', '4 Stars'),
+    ))
+
+    class Meta:
+        ordering = ('book',)
+        verbose_name = "Book Rating"
+        verbose_name = "Book Ratings"
+
+    def __str__(self):
+        return "%s - %s" % (self.book.title, self.rating)
+
