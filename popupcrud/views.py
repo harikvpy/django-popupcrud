@@ -73,7 +73,7 @@ class AjaxObjectFormMixin(object):
         return form
 
     def _init_related_fields(self, form):
-        related_popups  = getattr(self._viewset, 'related_popups', {})
+        related_popups  = getattr(self._viewset, 'related_object_popups', {})
         for fname in related_popups:
             if fname in form.fields:
                 field = form.fields[fname]
@@ -370,12 +370,23 @@ class PopupCrudViewSet(object):
     #: to the internal template.
     list_template = None
 
-    #: The template file to use for create view. If not specified, defaults
-    #: to the internal template.
+    # #: The template file to use for create view. If not specified, defaults
+    # #: to the internal template.
     #create_template: template to use for create new object view
     #edit_template: template to use for editing an existing object view
     #detail_template: template to use for detail view
     #delete_template: template to use for delete view
+
+    #: A table that maps foreign keys to its target model's
+    #: PopupCrudViewSet.create() view url. This would result in the select box
+    #: for the foreign key to display a 'New {model}' link at its bottom, which
+    #: the user can click to add a new {model} object from another popup. The
+    #: new object will be added and will be added to the select's options and
+    #: set as the selected option.
+    #:
+    #: Defaults to empty dict, meaning creation of target model objects, for the
+    #: foreign keys of a model, from a popup is disabled.
+    related_object_popups = {}
 
     @classonlymethod
     def _generate_view(cls, crud_view_class, **initkwargs):
