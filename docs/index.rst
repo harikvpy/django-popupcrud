@@ -12,6 +12,5 @@ Welcome to django-popupcrud's documentation!
 
    quickstart
    reference
-   templatetags
    howto
    settings
