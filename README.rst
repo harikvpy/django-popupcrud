@@ -13,8 +13,8 @@ Requirements
 
 - Python 2.7, 3.4
 - Django >= 1.9
-- django-bootstrap3
-- django-pure-pagination
+- `django-bootstrap3 <https://github.com/dyve/django-bootstrap3.git>`_
+- `django-pure-pagination <https://github.com/jamespacileo/django-pure-pagination.git>`_
 
 Documentation
 -------------
@@ -35,8 +35,9 @@ Quickstart
    Alternatively, you can clone this repository and install from the repo root
    folder via ``pip install -e .``.
 
-2. Add ``popupcrud`` and its dependencies to INSTALLED_APPS in your project's
-   settings.py::
+2. Install the dependencies - ``django-bootstrap3`` and ``django-pure-pagination``. 
+   Add the dependencies and ``popupcrud`` to ``INSTALLED_APPS`` in your project's 
+   ``settings.py``::
 
        INSTALLED_APPS = [
            ...
@@ -56,9 +57,9 @@ Quickstart
         {% bootstrap_javascript %}
     </head>
 
-   PopupCrudViewSet assumes that the base template name is ``base.html``.
+   ``PopupCrudViewSet`` assumes that the base template name is ``base.html``.
    If your project uses a different base template filename, inform 
-   PopupCrudViewSet about it in ``settings.py``::
+   ``PopupCrudViewSet`` about it in ``settings.py``::
 
         POPUPCRUD = {
             'base_template': 'mybase.html',
