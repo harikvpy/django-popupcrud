@@ -347,7 +347,7 @@ class PopupCrudViewSet(object):
     paginate_by = 10 # turn on pagination by default
 
     #: List of permission names for the list view. Permission names are of the
-    #: same format as what is specified in `permission_required()` decorator.
+    #: same format as what is specified in ``permission_required()`` decorator.
     #: Defaults to no permissions, meaning no permission is required.
     list_permission_required = ()
 
@@ -379,7 +379,7 @@ class PopupCrudViewSet(object):
     #delete_template: template to use for delete view
 
     #: A table that maps foreign keys to its target model's
-    #: `PopupCrudViewSet.create()` view url. This would result in the select box
+    #: ``PopupCrudViewSet.create()`` view url. This would result in the select box
     #: for the foreign key to display a 'New {model}' link at its bottom, which
     #: the user can click to add a new {model} object from another popup. The
     #: newly created {model} object will be added to the select's options and
@@ -487,15 +487,15 @@ class PopupCrudViewSet(object):
         """
         Return the permission required for the CRUD operation specified in op.
         Default implementation returns the value of one
-        `{list|create|read|update|delete}_permission_required` class attributes.
+        ``{list|create|read|update|delete}_permission_required`` class attributes.
         Overriding this allows you to return dynamically computed permissions.
 
         :param op: The CRUD operation code. One of
-            `{'list'|'create'|'read'|'update'|'delete'}`.
+            ``{'list'|'create'|'read'|'update'|'delete'}``.
 
         :rtype:
-            The `permission_required` tuple for the specified operation.
-            Determined by looking up the given `op` from the table::
+            The ``permission_required`` tuple for the specified operation.
+            Determined by looking up the given ``op`` from the table::
 
                 permission_table = {
                     'list': self.list_permission_required,

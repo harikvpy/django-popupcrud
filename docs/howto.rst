@@ -5,7 +5,7 @@ How-tos
 Create CRUD views for a model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Given a model in app named `library` (source code taken from the `demo` project
+Given a model in app named ``library`` (source code taken from the ``demo`` project
 ) in project's repo::
 
     # library/models.py
@@ -74,7 +74,7 @@ In your CRUD ViewSet, declare the permissions required for each CRUD view as::
         delete_permission_required = ('library.delete_author',)
 
 However, if you want to determine the permission dynamically, override the
-`get_permission_required()` method and implement your custom permission logic::
+``get_permission_required()`` method and implement your custom permission logic::
 
     class AuthorViewSet(PopupCrudViewSet):
         model = Author
@@ -126,7 +126,43 @@ To illustrate with an example::
 
         # rest of the View handling code as per Django norms
 
-In the above form, the default widget for `author`, django.forms.widgets.Select
-has been replaced by `RelatedFieldPopupFormWidget`. Note the arguments to the
+In the above form, the default widget for ``author``, django.forms.widgets.Select
+has been replaced by ``RelatedFieldPopupFormWidget``. Note the arguments to the
 widget constructor -- it takes the underlying Select widget and a url to create
 a new instance of the model.
+
+Use Select2 instead of native Select widget
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Select2 is an advanced version the browser native Select box allowing users
+navigate through fairly large selection list using keystrokes. Select2 is 
+excellently supported in Django through the thirdparty app `django-select2
+<https://github.com/applegrew/django-select2/>`_. 
+Replacing the native ``django.forms.Select`` control with equivalent 
+``django_select2.forms.Select2Widget`` widget is extremely easy::
+
+    from django_select2.forms import Select2Widget
+    from popupcrud.widgets import RelatedFieldPopupFormWidget
+
+    class AuthorRatingForm(forms.Form):
+        author = forms.ModelChoiceField(queryset=Author.objects.all())
+        rating = forms.ChoiceField(label="Rating", choices=(
+            ('1', '1 Star'),
+            ('2', '2 Stars'),
+            ('3', '3 Stars'),
+            ('4', '4 Stars')
+        ))
+
+        def __init__(self, *args, **kwargs):
+            super(AuthorRatingForm, self).__init__(*args, **kwargs)
+            author = self.fields['author']
+            # Replace the default Select widget with PopupCrudViewSet's 
+            # RelatedFieldPopupFormWidget. Note the url argument to the widget.
+            author.widget = RelatedFieldPopupFormWidget(
+                widget=forms.Select2Widget(choices=author.choices),
+                new_url=reverse_lazy("library:new-author"))
+
+Note how ``Select2Widget`` is essentially a drop in replacement for the native
+``django.forms.Select`` widget. Consult ``django-select2`` `docs
+<http://django-select2.readthedocs.io/en/latest/get_started.html>`_
+for instructions on integrating it with your project.
+
