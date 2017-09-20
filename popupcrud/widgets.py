@@ -9,15 +9,27 @@ from django.utils.text import camel_case_to_spaces
 
 class RelatedFieldPopupFormWidget(RelatedFieldWidgetWrapper):
     """
-    A modified version of RelatedFieldWidgetWrapper, which simply adds a
-    'Create New' hyperlink to the bottom of the select box for a related
-    object. This hyperlink has the id set to 'add_id_<field_name>' with its
-    href set to 'javascript:void(0);'. Therefore the client has to provide
-    the necessary javascript code to bind to the click on this element to
-    activate the relevant popup.
+    A modified version of django.admin's `RelatedFieldWidgetWrapper`,
+    adds a **Create New** hyperlink to the bottom of the select box of a related
+    object field. This hyperlink will have CSS class `add-another` and its id
+    set to `add_id_<field_name>` with its href set to `javascript:void(0);`.
+
+    The associated JavaScript `popupcrud/js/popupcrud.js`, binds a click handler
+    to `.add-another`, which then activates the Bootstrap modal associated with
+    the hyperlink. The modal body will be filled with the HTML response from
+    an AJAX request to the hyperlink's `data-url` attribute value.
+
+    The JavaScript file is added to the form's media list automatically.
+
     """
     def __init__(self, widget, new_url, *args, **kwargs):
-        # pylint: disable=super-init-not-called
+        """
+        Constructor takes the following required parameters:
+
+        :param widget: The underlying `Select` widget that this widget replaces.
+        :param url: The url to load the HTML content to fill the assocaited modal
+            body.
+        """
         _unused = args, kwargs
         self.widget = widget
         self.new_url = str(new_url)

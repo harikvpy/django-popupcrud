@@ -30,11 +30,11 @@ POPUPCRUD.update(getattr(settings, 'POPUPCRUD', {}))
 
 class AjaxObjectFormMixin(object):
     """
-    Mixin facilitates single object create/edit/delete functions to be
-    performed through an AJAX request.
+    Mixin facilitates single object create/edit functions to be performed
+    through an AJAX request.
 
-    Views that provide the feature of creating/editing the model objects (that
-    they represent) via AJAX requests should derive from this class.
+    Views that provide the feature of creating/editing model objects
+    via AJAX requests should derive from this class.
 
     So if CRUD for a model wants to allow creation of its objects via a popup,
     its CreateView should include this mixin in its derivation chain. Such a
@@ -96,13 +96,14 @@ class AjaxObjectFormMixin(object):
 
 class AttributeThunk(object):
     """
-    Class thunks the various attributes expected by Django generic
-    CRUD views as properties of the parent viewset class instance, which is
-    passed as constructur argument.
+    Class thunks various attributes expected by Django generic CRUD views as
+    properties of the parent viewset class instance. This allows us to
+    normalize all CRUD view attributes as ViewSet properties and/or methods.
     """
     def __init__(self, viewset, *args, **kwargs):
         self._viewset = viewset()   # Sat 9/9, changed to store Viewset object
                                     # instead of viewset class
+        self._viewset.view = self   # allow viewset methods to access view
         super(AttributeThunk, self).__init__(*args, **kwargs)
 
     @property
@@ -151,7 +152,7 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
         return templates
 
     def get_permission_required(self):
-        return self._viewset._get_permission_required('list')
+        return self._viewset.get_permission_required('list')
 
     def get_context_data(self, **kwargs):
         context = super(ListView, self).get_context_data(**kwargs)
@@ -202,7 +203,7 @@ class CreateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
         return super(CreateView, self).get_context_data(**kwargs)
 
     def get_permission_required(self):
-        return self._viewset._get_permission_required('create')
+        return self._viewset.get_permission_required('create')
 
     # def get_form_class(self):
     #     if getattr(self._viewset, 'form_class', None):
@@ -215,7 +216,7 @@ class DetailView(AttributeThunk, PermissionRequiredMixin, generic.DetailView):
         super(DetailView, self).__init__(viewset_cls, *args, **kwargs)
 
     def get_permission_required(self):
-        return self._viewset._get_permission_required('read')
+        return self._viewset.get_permission_required('read')
 
 
 class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
@@ -233,7 +234,7 @@ class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
         return super(UpdateView, self).get_context_data(**kwargs)
 
     def get_permission_required(self):
-        return self._viewset._get_permission_required('update')
+        return self._viewset.get_permission_required('update')
 
     # def get_form_class(self):
     #     if getattr(self._viewset, 'form_class', None):
@@ -275,7 +276,7 @@ class DeleteView(AttributeThunk, PermissionRequiredMixin, generic.DeleteView):
             return retval
 
     def get_permission_required(self):
-        return self._viewset._get_permission_required('delete')
+        return self._viewset.get_permission_required('delete')
 
 
 class PopupCrudViewSet(object):
@@ -346,7 +347,7 @@ class PopupCrudViewSet(object):
     paginate_by = 10 # turn on pagination by default
 
     #: List of permission names for the list view. Permission names are of the
-    #: same format as what is specified in permission_required() decorator.
+    #: same format as what is specified in `permission_required()` decorator.
     #: Defaults to no permissions, meaning no permission is required.
     list_permission_required = ()
 
@@ -378,11 +379,11 @@ class PopupCrudViewSet(object):
     #delete_template: template to use for delete view
 
     #: A table that maps foreign keys to its target model's
-    #: PopupCrudViewSet.create() view url. This would result in the select box
+    #: `PopupCrudViewSet.create()` view url. This would result in the select box
     #: for the foreign key to display a 'New {model}' link at its bottom, which
     #: the user can click to add a new {model} object from another popup. The
-    #: new object will be added and will be added to the select's options and
-    #: set as the selected option.
+    #: newly created {model} object will be added to the select's options and
+    #: set as its selected option.
     #:
     #: Defaults to empty dict, meaning creation of target model objects, for the
     #: foreign keys of a model, from a popup is disabled.
@@ -421,6 +422,9 @@ class PopupCrudViewSet(object):
         # like csrf_exempt from dispatch
         #update_wrapper(view, crud_view_class.dispatch, assigned=())
         return view
+
+    def __init__(self, *args, **kwargs):
+        self.view = None
 
     @classonlymethod
     def list(cls, **initkwargs):
@@ -479,25 +483,27 @@ class PopupCrudViewSet(object):
         """
         return "#"
 
-    def _get_permission_required(self, op):
+    def get_permission_required(self, op):
         """
         Return the permission required for the CRUD operation specified in op.
+        Default implementation returns the value of one
+        `{list|create|read|update|delete}_permission_required` class attributes.
+        Overriding this allows you to return dynamically computed permissions.
 
-        Parameters:
-            op: {'list'|'create'|'read'|'update'|'delete'}, where
+        :param op: The CRUD operation code. One of
+            `{'list'|'create'|'read'|'update'|'delete'}`.
 
-                'list':= PopupCrudViewSet.list()
-                'create':= PopupCrudViewSet.create()
-                'read':= PopupCrudViewSet.detail()
-                'update':= PopupCrudViewSet.update()
-                'delete':= PopupCrudViewSet.delete()
+        :rtype:
+            The `permission_required` tuple for the specified operation.
+            Determined by looking up the given `op` from the table::
 
-        Return:
-            The permission_required tuple for the specified operation
-
-        Remarks:
-            Default implementation returns an empty tuple, meaning that
-            none of the views require any permissions.
+                permission_table = {
+                    'list': self.list_permission_required,
+                    'create': self.create_permission_required,
+                    'read': self.read_permission_required,
+                    'update': self.update_permission_required,
+                    'delete': self.delete_permission_required
+                }
         """
         permission_table = {
             'list': self.list_permission_required,

@@ -65,11 +65,14 @@ class BookCrudViewset(PopupCrudViewSet):
         return reverse_lazy("library:delete-book", kwargs={'pk': obj.pk})
 
 
-class AuthorRatingForm(forms.ModelForm):
-
-    class Meta:
-        model = AuthorRating
-        fields = ('author', 'rating')
+class AuthorRatingForm(forms.Form):
+    author = forms.ModelChoiceField(queryset=Author.objects.all())
+    rating = forms.ChoiceField(label="Rating", choices=(
+        ('1', '1 Star'),
+        ('2', '2 Stars'),
+        ('3', '3 Stars'),
+        ('4', '4 Stars')
+    ))
 
     def __init__(self, *args, **kwargs):
         super(AuthorRatingForm, self).__init__(*args, **kwargs)
