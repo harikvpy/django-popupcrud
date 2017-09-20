@@ -123,7 +123,7 @@ $(document).ready(function() {
     $(".add-another").click(function(evtObj) {
       var url = $(this).data('url');
       var title = $(this).text();
-      var select = $(this).prev('select');
+      var select = $(this).prevAll('select');
       var modalId = $(this).data('modal');
       var modal = $('#' + modalId);
       modal.find('.modal-body').load(url, function () {

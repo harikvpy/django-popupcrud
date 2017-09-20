@@ -8,6 +8,13 @@ from django import forms
 from django.contrib import messages
 from popupcrud.widgets import RelatedFieldPopupFormWidget
 
+try:
+    from django_select2.forms import Select2Widget
+    _select2 = True
+except ImportError:
+    _select2 = False
+
+
 from .models import Author, Book, AuthorRating, BookRating
 from popupcrud.views import PopupCrudViewSet
 
@@ -117,7 +124,8 @@ class MultipleRelatedObjectForm(forms.Form):
         super(MultipleRelatedObjectForm, self).__init__(*args, **kwargs)
         author = self.fields['author']
         author.widget = RelatedFieldPopupFormWidget(
-            widget=forms.Select(choices=author.choices),
+            widget=Select2Widget(choices=author.choices) if _select2 else \
+                    forms.Select(choices=author.choices),
             new_url=reverse_lazy("library:new-author"))
         book = self.fields['book']
         book.widget = RelatedFieldPopupFormWidget(

@@ -48,6 +48,15 @@ INSTALLED_APPS = [
     'library',
 ]
 
+try:
+    import django_select2
+    INSTALLED_APPS += [
+        'django_select2'
+    ]
+except ImportError:
+    pass
+
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -138,6 +147,18 @@ import socket
 if socket.gethostname() == 'kaveri':
     LIVERELOAD_HOST = '192.168.225.101'
 
+# DJANGO_SELECT2 settings
+SELECT2_BOOTSTRAP = True
+# TODO: auto rendering of select2 media components onnly seems to work
+# the first time the server loads the files. Therefore we disable it
+# and explicitly specify the associated media resources from the relevant
+# form using a Media stub.
+# Verify if this behavior is only in development server and if production
+# does not exhibit this problem, we should go back to using AUTO_RENDER
+# as it yields minified media resources for non-DEBUG code.
+AUTO_RENDER_SELECT2_STATICS = True
+
 POPUPCRUD = {
     'base_template': 'base.html'
 }
+

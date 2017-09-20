@@ -23,3 +23,11 @@ urlpatterns = [
     url(r'^library/', include('library.urls', namespace='library')),
     url(r'^$', TemplateView.as_view(template_name="home.html"), name='home'),
 ]
+
+try:
+    import django_select2
+    urlpatterns += [
+        url(r'^select2/', include('django_select2.urls')),
+    ]
+except ImportError:
+    pass
