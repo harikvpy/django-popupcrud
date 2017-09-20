@@ -1,5 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-<a href="{% url "library:authors" %}">Authors</a><br/>
-<a href="{% url "library:books" %}">Books</a>
+<ul>
+<li><a href="{% url "library:authors" %}">Authors - Author table CRUD</a><br/>
+</li>
+<li><a href="{% url "library:books" %}">Books - Book table CRUD, shows inline creation of new Author related objects</a>
+</li>
+<li><a href="{% url "library:author-rating" %}">Author Rating - Shows inline creation of new Author related objects from a standard form</a>
+</li>
+<li><a href="{% url "library:book-rating" %}">Book Rating - Vanilla form with inline new object creation disabled</a>
+</li>
+<li><a href="{% url "library:multi-related-object-demo" %}">Multiple Related Object - Shows inline creation of multiple related objects, through layered popus</a>
+</li>
+</ul>
 {% endblock content %}

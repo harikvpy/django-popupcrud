@@ -98,6 +98,17 @@ Quickstart
    PopupCrudViewSet has many options to customize the fields displayed in list
    view, form used for create/update operations, permission control and more.
 
+Demo Project
+------------
+The demo project in folder `demo` shows four usage scenarios of PopupCrudViewSet.
+To run, issue, from `demo` folder::
+
+    ./manage migrate
+    ./manage runserver
+
+Homepage has links to the various views in the project that demonstrates 
+different use cases. Each link has a brief description on the type of use case
+it demonstrates.
 
 License
 -------
