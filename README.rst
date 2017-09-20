@@ -101,7 +101,8 @@ Quickstart
 Demo Project
 ------------
 The demo project in folder ``demo`` shows four usage scenarios of 
-``PopupCrudViewSet``. To run, issue, from ``demo`` folder::
+``PopupCrudViewSet``. To run the demo, issue the following commands from 
+``demo`` folder::
 
     ./manage migrate
     ./manage runserver
