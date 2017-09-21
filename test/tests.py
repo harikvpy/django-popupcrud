@@ -17,25 +17,30 @@ class PopupCrudViewSetTests(TestCase):
         self.assertEquals(POPUPCRUD['base_template'], "test/base.html")
 
     def test_template(self):
+        author = Author.objects.create(name="John", age=26)
         response = self.client.get(reverse("authors"))
         self.assertTemplateUsed(response, "popupcrud/list.html")
-        # template should have the three embedded modals windows
+        # template should have the three embedded bootstrap modals
         modal_patterns = [
             r'<div class="modal fade".*id="create-edit-modal"',
             r'<div class="modal fade".*id="delete-modal"',
             r'<div class="modal fade".*id="delete-result-modal"',
         ]
         for pattern in modal_patterns:
-            self.assertTrue(re.search(pattern,
-                                      response.content.decode('utf-8')))
+            self.assertTrue(
+                re.search(pattern, response.content.decode('utf-8')))
 
     def test_list_display(self):
-        Author.objects.create(name="John", age=25)
+        author = Author.objects.create(name="John", age=26)
         response = self.client.get(reverse("authors"))
         self.assertContains(response, "<th>Name</th>")
         self.assertContains(response, "<th>Age</th>")
+        self.assertContains(response, "<th>Half Age</th>")
+        self.assertContains(response, "<th>Double Age</th>")
         self.assertContains(response, "<td>John</td>")
-        self.assertContains(response, "<td>25</td>")
+        self.assertContains(response, "<td>26</td>")
+        self.assertContains(response, "<td>13</td>") # Author.half_age
+        self.assertContains(response, "<td>52</td>") # AuthorCrudViewSet.double_age
 
     def test_empty_data(self):
         response = self.client.get(reverse("authors"))

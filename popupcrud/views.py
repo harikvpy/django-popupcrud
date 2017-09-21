@@ -326,6 +326,18 @@ class PopupCrudViewSet(object):
     #: Lists the fields to be displayed in the list view columns. This attribute
     #: is modelled after ModelAdmin.list_display and supports model methods as
     #: as ViewSet methods much like ModelAdmin. This is a required attribute.
+    #:
+    #: So you have four possible values that can be used in list_display:
+    #:
+    #:  - A field of the model
+    #:  - A callable that accepts one parameter for the model instance.
+    #:  - A string representing an attribute on ViewSet class.
+    #:  - A string representing an attribute on the model
+    #:
+    #: See ModelAdmin.list_display `documentation
+    #: <https://docs.djangoproject.com/en/1.11/ref/contrib/admin/#django.contrib.admin.ModelAdmin.list_display>`_
+    #: for examples.
+
     list_display = ()
 
     #: A list of names of fields. This is interpreted the same as the Meta.fields

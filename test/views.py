@@ -16,7 +16,7 @@ class AuthorForm(forms.ModelForm):
 class AuthorCrudViewset(PopupCrudViewSet):
     model = Author
     fields = ('name', 'age')
-    list_display = ('name', 'age')
+    list_display = ('name', 'age', 'half_age', 'double_age')
     list_url = reverse_lazy("authors")
     new_url = reverse_lazy("new-author")
 
@@ -30,7 +30,7 @@ class AuthorCrudViewset(PopupCrudViewSet):
 
     def half_age(self, author):
         return author.age/2
-    half_age.label = "Half life"
+    half_age.label = "Half Age"
 
     def get_edit_url(self, obj):
         return reverse("edit-author", kwargs={'pk': obj.pk})
