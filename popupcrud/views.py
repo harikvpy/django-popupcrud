@@ -19,11 +19,29 @@ from pure_pagination import PaginationMixin
 from .widgets import RelatedFieldPopupFormWidget
 
 
-# default settings
 POPUPCRUD_DEFAULTS = {
     'base_template': 'base.html',
+
     'page_title_context_variable': 'page_title',
 }
+"""django-popupcrud global settings are specified as the dict variable
+``POPUPCRUD`` in settings.py.
+
+``POPUPCRUD`` currently supports the following settings with their
+default values:
+
+    - ``base_template``: The prjoject base template from which all popupcrud
+      templates should be derived.
+
+      Defaults to ``base.html``.
+
+    - ``page_title_context_variable``: Name of the context variable whose value
+      will be set as the title for the CRUD list view page. This title is
+      specified as the value for the class attribute ``ViewSet.page_title`` or
+      as the return value of ``ViewSet.get_page_title()``.
+
+      Defaults to ``page_title``.
+"""
 
 # build effective settings by merging any user settings with defaults
 POPUPCRUD = POPUPCRUD_DEFAULTS.copy()
@@ -162,7 +180,7 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
         context['model_options'] = self._viewset.model._meta
         context['new_button_text'] = ugettext("New {0}").format(
             self._viewset.model._meta.verbose_name)
-        context['new_url'] = getattr(self._viewset, 'new_url', None)
+        context['new_url'] = self._viewset.get_new_url()
         context['new_item_dialog_title'] = ugettext("New {0}").format(
             self.model._meta.verbose_name)
         context['edit_item_dialog_title'] = ugettext("Edit {0}").format(
@@ -202,7 +220,7 @@ class CreateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
 
     def get_context_data(self, **kwargs):
         kwargs['pagetitle'] = ugettext("New {0}").format(self._viewset.model._meta.verbose_name)
-        kwargs['form_url'] = self._viewset.new_url
+        kwargs['form_url'] = self._viewset.get_new_url()
         return super(CreateView, self).get_context_data(**kwargs)
 
     def get_permission_required(self):
@@ -478,6 +496,17 @@ class PopupCrudViewSet(object):
         to url() in urls.py.
         """
         return cls._generate_view(DeleteView, **initkwargs)
+
+    def get_new_url(self):
+        """ Returns the URL to create a new model object. Returning None would
+        disable the new object creation feature and will hide the ``New {model}``
+        button.
+
+        You may override this to dynamically determine if new object creation
+        ought to be allowed. Default implementation returns the value of
+        ``ViewSet.new_url``.
+        """
+        return self.new_url
 
     def get_detail_url(self, obj):
         """ Override this returning the URL where PopupCrudViewSet.detail() is
