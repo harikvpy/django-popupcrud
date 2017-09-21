@@ -485,6 +485,9 @@ class PopupCrudViewSet(object):
         """ Override this returning the URL where PopupCrudViewSet.update() is
         placed in the URL namespace such that ViewSet can generate the
         appropriate href to the item edit hyperlink in list view.
+
+        If None is returned, link to edit the specified item won't be
+        shown in the object row.
         """
         return "#"
 
@@ -492,6 +495,9 @@ class PopupCrudViewSet(object):
         """ Override this returning the URL where PopupCrudViewSet.delete() is
         placed in the URL namespace such that ViewSet can generate the
         appropriate href to the item delete hyperlink in list view.
+
+        If None is returned, link to delete the specified item won't be
+        shown in the object row.
         """
         return "#"
 
