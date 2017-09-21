@@ -36,4 +36,6 @@ class AuthorCrudViewset(PopupCrudViewSet):
         return reverse("edit-author", kwargs={'pk': obj.pk})
 
     def get_delete_url(self, obj):
+        if obj.age < 18:
+            return None
         return reverse("delete-author", kwargs={'pk': obj.pk})

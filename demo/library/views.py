@@ -50,6 +50,8 @@ class AuthorCrudViewset(PopupCrudViewSet):
         return reverse_lazy("library:edit-author", kwargs={'pk': obj.pk})
 
     def get_delete_url(self, obj):
+        if obj.age < 18:
+            return None
         return reverse_lazy("library:delete-author", kwargs={'pk': obj.pk})
 
 

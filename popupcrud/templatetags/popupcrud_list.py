@@ -94,10 +94,13 @@ def list_field_value(view, obj, field, context, index):
 
 
 def render_item_actions(context, obj):
-    action_template = """
-    <a name="create_edit_object" data-url="{0}" data-title="{2}" href="javascript:void(0);"><span class="glyphicon glyphicon-pencil" title="{2}"></span></a>
-    <a name="delete_object" data-url="{1}" data-title="{3}" href="javascript:void(0);"><span class="glyphicon glyphicon-trash" title="{3}"></span></a>
+    edit_template = """
+    <a name="create_edit_object" data-url="{0}" data-title="{1}" href="javascript:void(0);"><span class="glyphicon glyphicon-pencil" title="{1}"></span></a>
     """
+    delete_template = """
+    <a name="delete_object" data-url="{0}" data-title="{1}" href="javascript:void(0);"><span class="glyphicon glyphicon-trash" title="{1}"></span></a>
+    """
+
     view = context['view']
     edit_url = view._viewset.get_edit_url(obj)
     delete_url = view._viewset.get_delete_url(obj)
@@ -106,8 +109,9 @@ def render_item_actions(context, obj):
     delete_title = ugettext("Delete {0}").format(
         view._viewset.model._meta.verbose_name)
 
-    return mark_safe(action_template.format(
-        edit_url, delete_url, edit_title, delete_title))
+    edit_action = edit_template.format(edit_url, edit_title) if edit_url else ''
+    delete_action = delete_template.format(delete_url, delete_title) if delete_url else ''
+    return mark_safe("%s %s" % (edit_action, delete_action))
 
 
 def render_list_display(view, obj, context):
