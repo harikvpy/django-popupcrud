@@ -30,20 +30,21 @@ class AuthorForm(forms.ModelForm):
 class AuthorCrudViewset(PopupCrudViewSet):
     model = Author
     fields = ('name', 'penname', 'age')
-    list_display = ('name', 'penname', 'age')
+    list_display = ('name', 'penname', 'age', 'half_age', 'double_age')
     list_url = reverse_lazy("library:authors")
     new_url = reverse_lazy("library:new-author")
+
     """
     form_class = AuthorForm
     list_permission_required = ('library.add_author',)
     create_permission_required = ('library.add_author',)
     update_permission_required = ('library.change_author',)
     delete_permission_required = ('library.delete_author',)
+    """
 
     def half_age(self, author):
         return author.age/2
     half_age.label = "Half life"
-    """
 
     def get_edit_url(self, obj):
         return reverse_lazy("library:edit-author", kwargs={'pk': obj.pk})

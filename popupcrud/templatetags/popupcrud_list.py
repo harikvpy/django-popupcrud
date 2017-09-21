@@ -7,6 +7,7 @@ from django.forms.utils import pretty_name
 from django.template import Library
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext
+from django.contrib.admin.utils import lookup_field
 
 register = Library()
 
@@ -62,18 +63,24 @@ def list_display_headers(view, queryset):
 
 def list_field_value(view, obj, field, context, index):
     value = ''
-    if hasattr(obj, field):
-        value = getattr(obj, field)
-        if callable(value):
-            value = value()
-    elif hasattr(view._viewset, field):
-        # try if the attribute is a method on the viewset class itself
-        value = getattr(view._viewset, field)
-        if callable(value):
-            # TODO: 2017年09月06日 (週三) 08時33分26秒
-            #		We're instaintiating the viewset class for every field
-            #       that is a method on the viewset class. NOT VERY GOOD!
-            value = getattr(view._viewset, field)(obj)
+    try:
+        # Use django.admin's function to render the list_display column value
+        # lookup_field expects a ModelAdmin instance as the third argument,
+        # but all it does is dyanamic lookup of the field as a method of this
+        # object and if found, evaluates it to return the value. So it's safe
+        # to pass it a ViewSet instance. Of course, if the lookup_field
+        # implementation changes, we'll to change this code accordingly.
+        f, attr, value = lookup_field(field, obj, view._viewset)
+
+        # for fields that have 'choices=' set conver the value into its
+        # more descriptive string.
+        if getattr(f, 'choices', None):
+            choices = dict(f.choices)
+            if value in choices:
+                value = dict(choices)[value]
+
+    except AttributeError:
+        f, attr, value = (None, None, '')
 
     if index==0 and 'edit_url' in context:
         detail_url = view._viewset.get_detail_url(obj)

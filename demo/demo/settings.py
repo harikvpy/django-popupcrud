@@ -29,7 +29,7 @@ SECRET_KEY = '%llej&p5fuljmvgm=jzl31l0g(ogw8j&m#e7xp(tqdmmguizdr'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['kaveri']
 
 
 # Application definition
