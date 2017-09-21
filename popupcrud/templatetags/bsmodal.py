@@ -4,7 +4,7 @@ A tag to help creation of Bootstrap modal dialogs. You may use this tag as:
 
     .. code:: django
 
-        {% bsmodal dialogTitle dialogId [close_title_button={Yes|No}] [header_bg_css=''] %}
+        {% bsmodal dialogTitle dialogId [close_title_button={Yes|No}] %}
             <dialog content goes here>
         {% endbsmodal %}
 
@@ -14,9 +14,6 @@ A tag to help creation of Bootstrap modal dialogs. You may use this tag as:
     :dialogId: Required. The id of the modal window specified as string literal.
     :close_title_button: Optional. A flag indicating whether to show the modal
         window close button on the titlebar. Specify one of ``Yes`` or ``No``.
-    :header_bg_css: Optional. A css class for the header background. Defaults to
-        no style which results in a title with the same background color as the
-        rest of the modal window.
 
 
 This would create a hidden dialog with title ``dialogTitle`` and id ``dialogId``.
@@ -39,6 +36,10 @@ The final rendered html fragment would look like this:
             </div>
         </div>
 
+The html template for the modal is stored in ``popupcrud/modal.html``. So if you
+want to custom styling of the modal windows, you may define your own template
+in your projects ``templates`` folder.
+
 Refer to Boostrap `documentation <https://getbootstrap.com/docs/3.3/javascript/#modals>`_ on modals for more information on how to show
 and hide the modal windows.
 """
@@ -46,26 +47,6 @@ and hide the modal windows.
 from django import template
 
 register = template.Library()
-
-DIALOG_TEMPLATE = u"""
-    <div class="modal fade" id="{0}" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-top" role="document">
-            <div class="modal-content">
-                <div class="modal-header {4}">
-                    {3}
-                    <h4 class="modal-title">{1}</h4>
-                </div>
-                <div class="modal-body">
-                    {2}
-                </div>
-            </div>
-        </div>
-    </div>
-    """
-
-DIALOG_CLOSE_TITLE_BUTTON = u"""
-    <button type="button" class="close" data-dismiss="modal" aria-label=""><span aria-hidden="true">&times;</span></button>
-    """
 
 class ModalDialog(template.Node):
     def __init__(self, dialog_id, title, content_nodelist, close_title_button=True,
@@ -81,13 +62,14 @@ class ModalDialog(template.Node):
             title = self.title.resolve(context)
         except template.VariableDoesNotExist:
             title = self.title.var
-        return DIALOG_TEMPLATE.format(
-                self.dialog_id,
-                title,
-                self.content_nodelist.render(context),
-                DIALOG_CLOSE_TITLE_BUTTON if self.close_title_button else '',
-                self.header_bg_css
-                )
+
+        templ = template.loader.get_template("popupcrud/modal.html")
+        return templ.render({
+            'id': self.dialog_id,
+            'title': title,
+            'body': self.content_nodelist.render(context),
+            'close_btn': self.close_title_button,
+        })
 
 
 def strip_quotes(string):
