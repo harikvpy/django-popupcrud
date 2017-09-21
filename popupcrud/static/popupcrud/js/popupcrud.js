@@ -56,7 +56,7 @@ $(document).ready(function() {
   $("a[name='delete_object']").click(function(evtObj) {
     evtObj.preventDefault();
     $('#delete-modal #id_object_name').text(
-      $(evtObj.target).parents('tr').children(':nth-child(1)').text());
+      $(evtObj.target).parents('tr').children(':nth-child(1)').children('div').data('name'));
     $('#delete-modal .modal-body form').attr(
       'action', $(evtObj.target).parent('a').data('url'));
     $('#delete-modal').modal('show');

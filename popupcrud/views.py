@@ -501,6 +501,18 @@ class PopupCrudViewSet(object):
         """
         return "#"
 
+    def get_obj_name(self, obj):
+        """ Return the name of the object that will be displayed in item
+        action prompts for confirmation. Defaults to ``str(obj)``, ie., the
+        string representation of the object. Override this to provide the user
+        with additional object details. The returned string may contain
+        embedded HTML tags.
+
+        For example, you might want to display the balance due from a customer
+        when confirming user action to delete the customer record.
+        """
+        return str(obj)
+
     def get_permission_required(self, op):
         """
         Return the permission required for the CRUD operation specified in op.

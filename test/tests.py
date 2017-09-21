@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re
 import json
 
@@ -37,10 +38,19 @@ class PopupCrudViewSetTests(TestCase):
         self.assertContains(response, "<th>Age</th>")
         self.assertContains(response, "<th>Half Age</th>")
         self.assertContains(response, "<th>Double Age</th>")
-        self.assertContains(response, "<td>John</td>")
+        # also tests the get_obj_name() method
+        self.assertTrue(
+            re.search(r'<td>John.*/div></td>', response.content.decode('utf-8')))
+        #self.assertContains(response, "<td>John.*/div></td>")
         self.assertContains(response, "<td>26</td>")
         self.assertContains(response, "<td>13</td>") # Author.half_age
         self.assertContains(response, "<td>52</td>") # AuthorCrudViewSet.double_age
+
+    def test_get_obj_name(self):
+        # Also tests that unicode characters are rendered correctly
+        author = Author.objects.create(name="何瑞理", age=46)
+        response = self.client.get(reverse("authors"))
+        self.assertContains(response, "<td>何瑞理<div data-name=\'何瑞理 - 46\'></div></td>")
 
     def test_empty_data(self):
         response = self.client.get(reverse("authors"))

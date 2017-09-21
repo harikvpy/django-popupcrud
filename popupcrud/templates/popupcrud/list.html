@@ -20,7 +20,7 @@
 {% endbsmodal %}
 {% trans 'Confirm Delete' as confirm_delete_title %}
 {% bsmodal confirm_delete_title 'delete-modal' close_title_button=Yes header_bg_css=bg-primary %}
-    <strong>{{ model_options.verbose_name }}:</strong> <span id='id_object_name'></span><br/>
+    <strong>{{ model_options.verbose_name }}:</strong><br/> <span id='id_object_name'></span><br/>
     <br/>
     <p>{% trans 'Are you sure you want to delete this?' %}</p>
     <form role="form" id="delete-form" action="" method="post">

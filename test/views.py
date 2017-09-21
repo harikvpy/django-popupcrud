@@ -39,3 +39,6 @@ class AuthorCrudViewset(PopupCrudViewSet):
         if obj.age < 18:
             return None
         return reverse("delete-author", kwargs={'pk': obj.pk})
+
+    def get_obj_name(self, obj):
+        return "%s - %d" % (obj.name, obj.age)

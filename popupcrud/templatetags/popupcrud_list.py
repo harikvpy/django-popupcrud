@@ -82,13 +82,14 @@ def list_field_value(view, obj, field, context, index):
     except AttributeError:
         f, attr, value = (None, None, '')
 
-    if index==0 and 'edit_url' in context:
+    if index == 0:
         detail_url = view._viewset.get_detail_url(obj)
         if detail_url:
-            return mark_safe('<a name="object_detail" data-url="{0}" href="javascript:void(0);">{1}</a>'.format(
-                detail_url, value))
-        else:
-            return value
+            value = '<a name="object_detail" data-url="{0}" href="javascript:void(0);">{1}</a>'.format(
+                detail_url, value)
+
+        return mark_safe("%s<div data-name='%s'></div>" % (
+            value, view._viewset.get_obj_name(obj)))
 
     return value
 
