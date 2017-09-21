@@ -29,7 +29,7 @@ class AuthorCrudViewset(PopupCrudViewSet):
     """
 
     def half_age(self, author):
-        return author.age/2
+        return int(author.age/2)
     half_age.label = "Half Age"
 
     def get_edit_url(self, obj):
