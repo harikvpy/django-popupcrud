@@ -52,6 +52,11 @@ class PopupCrudViewSetTests(TestCase):
         response = self.client.get(reverse("authors"))
         self.assertContains(response, "<td>何瑞理<div data-name=\'何瑞理 - 46\'></div></td>")
 
+    def test_page_title(self):
+        author = Author.objects.create(name="John", age=26)
+        response = self.client.get(reverse("authors"))
+        self.assertEquals(response.context['page_title'], "Author List")
+
     def test_empty_data(self):
         response = self.client.get(reverse("authors"))
         self.assertNotContains(response, "<table class='table")

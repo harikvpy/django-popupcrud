@@ -21,7 +21,8 @@ from .widgets import RelatedFieldPopupFormWidget
 
 # default settings
 POPUPCRUD_DEFAULTS = {
-    'base_template': 'base.html'
+    'base_template': 'base.html',
+    'page_title_context_variable': 'page_title',
 }
 
 # build effective settings by merging any user settings with defaults
@@ -119,6 +120,8 @@ class AttributeThunk(object):
 
     def get_context_data(self, **kwargs):
         kwargs['base_template'] = POPUPCRUD['base_template']
+        title_cv = POPUPCRUD['page_title_context_variable']
+        kwargs[title_cv] = self._viewset.get_page_title()
         return super(AttributeThunk, self).get_context_data(**kwargs)
 
 
@@ -401,6 +404,9 @@ class PopupCrudViewSet(object):
     #: foreign keys of a model, from a popup is disabled.
     related_object_popups = {}
 
+    #: Page title for the list view page.
+    page_title = ''
+
     @classonlymethod
     def _generate_view(cls, crud_view_class, **initkwargs):
         """
@@ -543,3 +549,9 @@ class PopupCrudViewSet(object):
             'delete': self.delete_permission_required
         }
         return permission_table[op]
+
+    def get_page_title(self):
+        #: Returns the page title for the list view. By default returns the
+        #: value of class variable ``page_title``.
+        return self.page_title if self.page_title else \
+                self.model._meta.verbose_name_plural

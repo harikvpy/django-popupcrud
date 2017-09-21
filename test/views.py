@@ -19,6 +19,7 @@ class AuthorCrudViewset(PopupCrudViewSet):
     list_display = ('name', 'age', 'half_age', 'double_age')
     list_url = reverse_lazy("authors")
     new_url = reverse_lazy("new-author")
+    page_title = "Author List"
 
     """
     form_class = AuthorForm
