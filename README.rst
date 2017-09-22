@@ -29,9 +29,6 @@ Quickstart
 
    ``pip install git+https://github.com/harikvpy/django-popupcrud.git``
 
-   *Package has not yet been uploaded to PyPI, so until then install it directly
-   from the repository.*
-
    Alternatively, you can clone this repository and install from the repo root
    folder via ``pip install -e .``.
 
