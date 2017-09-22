@@ -23,6 +23,8 @@ POPUPCRUD_DEFAULTS = {
     'base_template': 'base.html',
 
     'page_title_context_variable': 'page_title',
+
+    'paginate_by': 10,
 }
 """django-popupcrud global settings are specified as the dict variable
 ``POPUPCRUD`` in settings.py.
@@ -41,6 +43,11 @@ default values:
       as the return value of ``ViewSet.get_page_title()``.
 
       Defaults to ``page_title``.
+
+    - ``paginate_by``: Default number of rows per page for queryset pagination.
+      This is the same as ListView.paginate_by.
+
+      Defaults to 10.
 """
 
 # build effective settings by merging any user settings with defaults
@@ -151,7 +158,7 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
         super(ListView, self).__init__(viewset_cls, *args, **kwargs)
 
     def get_paginate_by(self, queryset):
-        return self._viewset.paginate_by
+        return self._viewset.get_paginate_by()
 
     def get_queryset(self):
         qs = super(ListView, self).get_queryset()
@@ -377,7 +384,7 @@ class PopupCrudViewSet(object):
 
     #: Number of entries per page in list view. Defaults to 10. Setting this
     #: to None will disable pagination. This is an optional attribute.
-    paginate_by = 10 # turn on pagination by default
+    paginate_by = POPUPCRUD['paginate_by'] #10 # turn on pagination by default
 
     #: List of permission names for the list view. Permission names are of the
     #: same format as what is specified in ``permission_required()`` decorator.
@@ -584,3 +591,9 @@ class PopupCrudViewSet(object):
         #: value of class variable ``page_title``.
         return self.page_title if self.page_title else \
                 self.model._meta.verbose_name_plural
+
+    def get_paginate_by(self):
+        #: Returns the number of items to paginate by, or None for no
+        #: pagination. By default this simply returns the value of
+        #: ``paginate_by``.
+        return self.paginate_by
