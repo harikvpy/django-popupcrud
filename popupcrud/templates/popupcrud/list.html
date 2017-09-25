@@ -7,7 +7,11 @@
 {% block create_new %}
 {% if new_url %}
 <div>
+{% if legacy_crud %}
+    <a class="btn btn-primary" href="{{ new_url }}" type="link">{{ new_button_text }}</a>
+{% else %}
     <a class="btn btn-primary" href="javascript:void(0);" name="create_edit_object" type="link" data-url="{{ new_url }}" data-title="{{ new_button_text }}">{{ new_button_text }}</a>
+{% endif %}
 </div>
 {% endif %}
 {% endblock create_new %}
@@ -17,6 +21,7 @@
 {% else %}
 <p>{% block empty_table_label %}{% trans "No items." %}{% endblock empty_table_label %}</p>
 {% endif %}
+{% if not legacy_crud %}
 {% bsmodal '??' 'create-edit-modal' close_title_button=Yes header_bg_css=bg-primary %}
     {# modal body will be filled in by jQuery.load(<new_object_url>) return value #}
     ??
@@ -42,4 +47,5 @@
     </div>
 {% endbsmodal %}
 <script src="{% static 'popupcrud/js/popupcrud.js' %}" type="text/javascript" charset="utf-8"></script>
+{% endif %} {# legacy_crud #}
 {% endblock content %}

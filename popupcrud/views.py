@@ -12,6 +12,7 @@ from django.views import generic
 from django.http import JsonResponse
 from django.template import loader
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib import messages
 from django.utils.decorators import classonlymethod
 from django.utils.translation import ugettext_lazy as _, ugettext
 from django.utils.http import urlencode
@@ -220,6 +221,7 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
             self.model._meta.verbose_name)
         context['edit_item_dialog_title'] = ugettext("Edit {0}").format(
             self.model._meta.verbose_name)
+        context['legacy_crud'] = self._viewset.legacy_crud
         return context
 
     def _get_default_ordering(self):
@@ -458,8 +460,15 @@ class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
 
 class DeleteView(AttributeThunk, PermissionRequiredMixin, generic.DeleteView):
 
+    template_name = "popupcrud/confirm_delete.html"
+
     def __init__(self, viewset_cls, *args, **kwargs):
         super(DeleteView, self).__init__(viewset_cls, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        kwargs['pagetitle'] = _("Delete {0}").format(self._viewset.model._meta.verbose_name)
+        kwargs['model_options'] = self._viewset.model._meta
+        return super(DeleteView, self).get_context_data(**kwargs)
 
     def handle_no_permission(self):
         """
@@ -487,6 +496,9 @@ class DeleteView(AttributeThunk, PermissionRequiredMixin, generic.DeleteView):
                     str(self.object))
             })
         else:
+            messages.info(self.request, _("{0} {1} deleted").format(
+                self._viewset.model._meta.verbose_name,
+                str(self.object)))
             return retval
 
     def get_permission_required(self):
@@ -619,6 +631,14 @@ class PopupCrudViewSet(object):
     page_title = ''
 
     ordering = None
+
+    #: Enables legacy CRUD views where each of the Create, Update & Delete views
+    #: are performed from their own templated views. That is, clicking on the
+    #: relevant action link on the list view takes you to its own dedicated
+    #: action page like Django's admin.
+    #:
+    #: This is disabled by default.
+    legacy_crud = False
 
     @classonlymethod
     def _generate_view(cls, crud_view_class, **initkwargs):

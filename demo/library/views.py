@@ -33,6 +33,7 @@ class AuthorCrudViewset(PopupCrudViewSet):
     list_display = ('name', 'penname', 'age', 'half_age', 'double_age')
     list_url = reverse_lazy("library:authors")
     new_url = reverse_lazy("library:new-author")
+    legacy_crud = True
 
     """
     form_class = AuthorForm

@@ -198,6 +198,12 @@ def render_item_actions(context, obj):
     delete_template = """
     <a name="delete_object" data-url="{0}" data-title="{1}" href="javascript:void(0);"><span class="glyphicon glyphicon-trash" title="{1}"></span></a>
     """
+    legacy_edit_template = """
+    <a href="{0}"><span class="glyphicon glyphicon-pencil" title="{1}"></span></a>
+    """
+    legacy_delete_template = """
+    <a href="{0}"><span class="glyphicon glyphicon-trash" title="{1}"></span></a>
+    """
 
     view = context['view']
     edit_url = view._viewset.get_edit_url(obj)
@@ -207,8 +213,12 @@ def render_item_actions(context, obj):
     delete_title = ugettext("Delete {0}").format(
         view._viewset.model._meta.verbose_name)
 
-    edit_action = edit_template.format(edit_url, edit_title) if edit_url else ''
-    delete_action = delete_template.format(delete_url, delete_title) if delete_url else ''
+    if view._viewset.legacy_crud:
+        edit_action = legacy_edit_template.format(edit_url, edit_title) if edit_url else ''
+        delete_action = legacy_delete_template.format(delete_url, delete_title) if delete_url else ''
+    else:
+        edit_action = edit_template.format(edit_url, edit_title) if edit_url else ''
+        delete_action = delete_template.format(delete_url, delete_title) if delete_url else ''
     return mark_safe("%s %s" % (edit_action, delete_action))
 
 
