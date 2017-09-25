@@ -8,7 +8,11 @@ from .models import Author, Book
 # Register your models here.
 @admin.register(Author)
 class AuthorAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('name', 'age', 'double_age')
+
+    def double_age(self, obj):
+        return obj.age*2
+    double_age.short_description = "Double Age"
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):

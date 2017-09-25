@@ -1,5 +1,8 @@
 {% extends base_template %}
 {% load i18n static bootstrap3 popupcrud_list bsmodal %}
+{% block extrahead %}
+<link rel="stylesheet" href="{% static 'popupcrud/css/popupcrud.css' %}" type="text/css" media="screen" title="no title" charset="utf-8">
+{% endblock extrahead %}
 {% block content %}
 {% block create_new %}
 {% if new_url %}

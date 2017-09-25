@@ -7,12 +7,14 @@ from django.forms.utils import pretty_name
 from django.template import Library
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext
-from django.contrib.admin.utils import lookup_field
+from django.utils.html import format_html
+from django.contrib.admin.utils import lookup_field,label_for_field as lff
 
 register = Library()
 
+from popupcrud.views import ORDER_VAR, ORDER_TYPE_VAR
 
-def label_for_field(view, queryset, field):
+def label_for_field(view, queryset, field_name):
     """
     Returns the suitable lable for a field. Labels are determined as per the
     following rules:
@@ -29,7 +31,7 @@ def label_for_field(view, queryset, field):
     """
     options = queryset.model._meta
     try:
-        field = options.get_field(field)
+        field = options.get_field(field_name)
         if isinstance(field, RelatedField):
             label = field.related_model._meta.verbose_name
         else:
@@ -37,28 +39,123 @@ def label_for_field(view, queryset, field):
     except FieldDoesNotExist:
         model = queryset.model
         # query the model for a method with matching name
-        if hasattr(model, field) and callable(getattr(model, field)):
+        if hasattr(model, field_name) and callable(getattr(model, field_name)):
             # method exists, return its 'label' attribute value
-            label = getattr(getattr(model, field), 'label', field.title())
+            label = getattr(getattr(model, field_name), 'label', field_name.title())
         # query the viewset for a method with matching name
-        elif hasattr(view._viewset, field) and callable(
-            getattr(view._viewset, field)):
+        elif hasattr(view._viewset, field_name) and callable(
+            getattr(view._viewset, field_name)):
             # method exists, return its 'label' attribute value
-            label = getattr(getattr(view._viewset, field), 'label', field.title())
+            label = getattr(getattr(view._viewset, field_name), 'label', field_name.title())
         else:
-            label = pretty_name(field)
+            label = pretty_name(field_name)
 
-    return label
+    return {
+        'text': label,
+        'sortable': False,
+        'class_attrib': 'class=col-{}'.format(field_name)
+    }
+
+
+def _coerce_field_name(field_name, field_index):
+    """
+    Coerce a field_name (which may be a callable) to a string.
+    """
+    if callable(field_name):
+        if field_name.__name__ == '<lambda>':
+            return 'lambda' + str(field_index)
+        else:
+            return field_name.__name__
+    return field_name
 
 
 def list_display_headers(view, queryset):
     """
     Returns the column headers for the fields specified in list_display
     """
-    for field in view._viewset.list_display:
-        yield label_for_field(view, queryset, field)
+    ordering_field_columns = view.get_ordering_field_columns()
 
-    yield ugettext("Action")
+    for i, field_name in enumerate(view._viewset.list_display):
+        text, attr = lff(field_name, view.model, view._viewset, return_attr=True)
+
+        if attr:
+            field_name = _coerce_field_name(field_name, i)
+            # Potentially not sortable
+
+            admin_order_field = getattr(attr, "admin_order_field", None)
+            if not admin_order_field:
+                # Not sortable
+                yield {
+                    "text": text,
+                    "class_attrib": format_html(' class="text-uppercase column-{}"', field_name),
+                    "sortable": False,
+                }
+                continue
+
+        # OK, it is sortable if we got this far
+        th_classes = ['sortable', 'column-{}'.format(field_name)]
+        order_type = ''
+        new_order_type = 'asc'
+        sort_priority = 0
+        sorted = False
+        # Is it currently being sorted on?
+        if i in ordering_field_columns:
+            sorted = True
+            order_type = ordering_field_columns.get(i).lower()
+            sort_priority = list(ordering_field_columns).index(i) + 1
+            th_classes.append('sorted %sending' % order_type)
+            new_order_type = {'asc': 'desc', 'desc': 'asc'}[order_type]
+
+        # build new ordering param
+        o_list_primary = []  # URL for making this field the primary sort
+        o_list_remove = []  # URL for removing this field from sort
+        o_list_toggle = []  # URL for toggling order type for this field
+
+        def make_qs_param(t, n):
+            return ('-' if t == 'desc' else '') + str(n)
+
+        for j, ot in ordering_field_columns.items():
+            if j == i:  # Same column
+                param = make_qs_param(new_order_type, j)
+                # We want clicking on this header to bring the ordering to the
+                # front
+                o_list_primary.insert(0, param)
+                o_list_toggle.append(param)
+                # o_list_remove - omit
+            else:
+                param = make_qs_param(ot, j)
+                o_list_primary.append(param)
+                o_list_toggle.append(param)
+                o_list_remove.append(param)
+
+        if i not in ordering_field_columns:
+            o_list_primary.insert(0, make_qs_param(new_order_type, i))
+
+        yield {
+            "text": text,
+            "sortable": True,
+            "sorted": sorted,
+            "ascending": order_type == "asc",
+            "sort_priority": sort_priority,
+            "url_primary": view.get_query_string({ORDER_VAR: '.'.join(o_list_primary)}),
+            "url_remove": view.get_query_string({ORDER_VAR: '.'.join(o_list_remove)}),
+            "url_toggle": view.get_query_string({ORDER_VAR: '.'.join(o_list_toggle)}),
+            "class_attrib": format_html(' class="text-uppercase {}"', ' '.join(th_classes)) if th_classes else '',
+        }
+
+        # yield {
+        #     'text': text,
+        #     'sortable': False,
+        #     'class_attrib': 'class=col-{}'.format(field_name)
+        # }
+        #yield label_for_field(view, queryset, field_name)
+
+    # Action column
+    yield {
+        'text': ugettext("Action"),
+        'sortable': False,
+        'class_attrib': 'class=text-uppercase col-action'
+    }
 
 
 def list_field_value(view, obj, field, context, index):
@@ -131,7 +228,15 @@ def list_display_results(view, queryset, context):
 def list_content(context):
     view = context['view']
     queryset = context['object_list'] #view.get_queryset()
+    headers = list(list_display_headers(view, queryset))
+
+    num_sorted_fields = 0
+    for h in headers:
+        if h['sortable'] and h['sorted']:
+            num_sorted_fields += 1
+
     return {
-        'headers': list_display_headers(view, queryset),
-        'results': list_display_results(view, queryset, context)
+        'headers': headers,
+        'results': list_display_results(view, queryset, context),
+        'num_sorted_fields': num_sorted_fields,
     }

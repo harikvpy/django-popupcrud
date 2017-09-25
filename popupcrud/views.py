@@ -2,17 +2,22 @@
 """ Popupcrud views """
 
 from functools import update_wrapper
+from collections import OrderedDict
 
+from django import forms
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import render_to_response
-from django.utils.decorators import classonlymethod
-from django.utils.translation import ugettext_lazy as _, ugettext
 from django.views import generic
 from django.http import JsonResponse
 from django.template import loader
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django import forms
+from django.utils.decorators import classonlymethod
+from django.utils.translation import ugettext_lazy as _, ugettext
+from django.utils.http import urlencode
+
+#from django.contrib.admin import ModelAdmin
+
 
 from pure_pagination import PaginationMixin
 
@@ -53,6 +58,16 @@ default values:
 # build effective settings by merging any user settings with defaults
 POPUPCRUD = POPUPCRUD_DEFAULTS.copy()
 POPUPCRUD.update(getattr(settings, 'POPUPCRUD', {}))
+
+ALL_VAR = 'all'
+ORDER_VAR = 'o'
+ORDER_TYPE_VAR = 'ot'
+PAGE_VAR = 'p'
+SEARCH_VAR = 'q'
+ERROR_FLAG = 'e'
+
+IGNORED_PARAMS = (
+    ALL_VAR, ORDER_VAR, ORDER_TYPE_VAR, SEARCH_VAR)
 
 class AjaxObjectFormMixin(object):
     """
@@ -156,6 +171,10 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
 
     def __init__(self, viewset_cls, *args, **kwargs):
         super(ListView, self).__init__(viewset_cls, *args, **kwargs)
+        request = kwargs['request']
+        self.params = dict(request.GET.items())
+        self.query = request.GET.get(SEARCH_VAR, '')
+        self.lookup_opts = self.model._meta
 
     def get_paginate_by(self, queryset):
         return self._viewset.get_paginate_by()
@@ -164,6 +183,15 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
         qs = super(ListView, self).get_queryset()
         # TODO: 2017年09月06日 (週三) 06時13分10秒
         #		Apply custom ordering based on GET arguments
+
+        # Apply any filters
+
+        # Set ordering.
+        ordering = self._get_ordering(self.request, qs)
+        qs = qs.order_by(*ordering)
+
+        # Apply search results
+
         return qs
 
     def get_template_names(self):
@@ -193,6 +221,164 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
         context['edit_item_dialog_title'] = ugettext("Edit {0}").format(
             self.model._meta.verbose_name)
         return context
+
+    def _get_default_ordering(self):
+        ordering = []
+        if self._viewset.ordering:
+            ordering = self._viewset.ordering
+        elif self.lookup_opts.ordering:
+            ordering = self.lookup_opts.ordering
+        return ordering
+
+    def get_ordering_field_columns(self):
+        """
+        Returns an OrderedDict of ordering field column numbers and asc/desc
+        """
+
+        # We must cope with more than one column having the same underlying sort
+        # field, so we base things on column numbers.
+        ordering = self._get_default_ordering()
+        ordering_fields = OrderedDict()
+        if ORDER_VAR not in self.params:
+            # for ordering specified on ModelAdmin or model Meta, we don't know
+            # the right column numbers absolutely, because there might be more
+            # than one column associated with that ordering, so we guess.
+            for field in ordering:
+                if field.startswith('-'):
+                    field = field[1:]
+                    order_type = 'desc'
+                else:
+                    order_type = 'asc'
+                for index, attr in enumerate(self.list_display):
+                    if self.get_ordering_field(attr) == field:
+                        ordering_fields[index] = order_type
+                        break
+        else:
+            for p in self.params[ORDER_VAR].split('.'):
+                none, pfx, idx = p.rpartition('-')
+                try:
+                    idx = int(idx)
+                except ValueError:
+                    continue  # skip it
+                ordering_fields[idx] = 'desc' if pfx == '-' else 'asc'
+        return ordering_fields
+
+    def get_ordering_field(self, field_name):
+        """
+        Returns the proper model field name corresponding to the given
+        field_name to use for ordering. field_name may either be the name of a
+        proper model field or the name of a method (on the admin or model) or a
+        callable with the 'admin_order_field' attribute. Returns None if no
+        proper model field name can be matched.
+        """
+        try:
+            field = self.lookup_opts.get_field(field_name)
+            return field.name
+        except FieldDoesNotExist:
+            # See whether field_name is a name of a non-field
+            # that allows sorting.
+            if callable(field_name):
+                attr = field_name
+            elif hasattr(self.model_admin, field_name):
+                attr = getattr(self.model_admin, field_name)
+            else:
+                attr = getattr(self.model, field_name)
+            return getattr(attr, 'admin_order_field', None)
+
+    def _get_ordering(self, request, queryset):
+        """
+        Returns the list of ordering fields for the change list.
+        First we check the get_ordering() method in model admin, then we check
+        the object's default ordering. Then, any manually-specified ordering
+        from the query string overrides anything. Finally, a deterministic
+        order is guaranteed by ensuring the primary key is used as the last
+        ordering field.
+        """
+        params = self.params
+        ordering = list(self._get_default_ordering())
+        if ORDER_VAR in params:
+            # Clear ordering and used params
+            ordering = []
+            order_params = params[ORDER_VAR].split('.')
+            for p in order_params:
+                try:
+                    none, pfx, idx = p.rpartition('-')
+                    field_name = self._viewset.list_display[int(idx)]
+                    order_field = self.get_ordering_field(field_name)
+                    if not order_field:
+                        continue  # No 'admin_order_field', skip it
+                    # reverse order if order_field has already "-" as prefix
+                    if order_field.startswith('-') and pfx == "-":
+                        ordering.append(order_field[1:])
+                    else:
+                        ordering.append(pfx + order_field)
+                except (IndexError, ValueError):
+                    continue  # Invalid ordering specified, skip it.
+
+        # Add the given query's ordering fields, if any.
+        ordering.extend(queryset.query.order_by)
+
+        # Ensure that the primary key is systematically present in the list of
+        # ordering fields so we can guarantee a deterministic order across all
+        # database backends.
+        pk_name = self.lookup_opts.pk.name
+        if not (set(ordering) & {'pk', '-pk', pk_name, '-' + pk_name}):
+            # The two sets do not intersect, meaning the pk isn't present. So
+            # we add it.
+            ordering.append('-pk')
+
+        return ordering
+
+    def get_ordering_field_columns(self):
+        """
+        Returns an OrderedDict of ordering field column numbers and asc/desc
+        """
+
+        # We must cope with more than one column having the same underlying sort
+        # field, so we base things on column numbers.
+        ordering = self._get_default_ordering()
+        ordering_fields = OrderedDict()
+        if ORDER_VAR not in self.params:
+            # for ordering specified on ModelAdmin or model Meta, we don't know
+            # the right column numbers absolutely, because there might be more
+            # than one column associated with that ordering, so we guess.
+            for field in ordering:
+                if field.startswith('-'):
+                    field = field[1:]
+                    order_type = 'desc'
+                else:
+                    order_type = 'asc'
+                for index, attr in enumerate(self._viewset.list_display):
+                    if self.get_ordering_field(attr) == field:
+                        ordering_fields[index] = order_type
+                        break
+        else:
+            for p in self.params[ORDER_VAR].split('.'):
+                none, pfx, idx = p.rpartition('-')
+                try:
+                    idx = int(idx)
+                except ValueError:
+                    continue  # skip it
+                ordering_fields[idx] = 'desc' if pfx == '-' else 'asc'
+        return ordering_fields
+
+    def get_query_string(self, new_params=None, remove=None):
+        if new_params is None:
+            new_params = {}
+        if remove is None:
+            remove = []
+        p = self.params.copy()
+        for r in remove:
+            for k in list(p):
+                if k.startswith(r):
+                    del p[k]
+        for k, v in new_params.items():
+            if v is None:
+                if k in p:
+                    del p[k]
+            else:
+                p[k] = v
+        return '?%s' % urlencode(sorted(p.items()))
 
 
 class TemplateNameMixin(object):
@@ -432,6 +618,8 @@ class PopupCrudViewSet(object):
     #: Page title for the list view page.
     page_title = ''
 
+    ordering = None
+
     @classonlymethod
     def _generate_view(cls, crud_view_class, **initkwargs):
         """
@@ -447,6 +635,7 @@ class PopupCrudViewSet(object):
         update_wrapper() calls at the end.
         """
         def view(request, *args, **kwargs):
+            initkwargs['request'] = request
             view = crud_view_class(cls, **initkwargs)
             if hasattr(view, 'get') and not hasattr(view, 'head'):
                 view.head = view.get

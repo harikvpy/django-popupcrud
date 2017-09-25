@@ -1,5 +1,11 @@
-from django.conf.urls import url
+from django.conf.urls import url, include
+from django.contrib import admin
+
+from library.models import Author
+from library.admin import AuthorAdmin
 from library import views
+
+author_admin = AuthorAdmin(Author, admin.site)
 
 urlpatterns = [
     url(r'^authors/$', views.AuthorCrudViewset.list(), name='authors'),
@@ -15,4 +21,8 @@ urlpatterns = [
     url(r'^rating/author/$', views.AuthorRatingView.as_view(), name='author-rating'),
     url(r'^rating/book/$', views.BookRatingView.as_view(), name='book-rating'),
     url(r'^mro/$', views.MultipleRelatedObjectDemoView.as_view(), name='multi-related-object-demo'),
+]
+
+urlpatterns += [
+    url(r'^writers/', include((author_admin.get_urls(), 'library'), namespace='writers')),
 ]

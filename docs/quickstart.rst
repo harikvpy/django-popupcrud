@@ -23,7 +23,15 @@ Quickstart
            ...
        ]
 
-3. Include Bootstrap CSS and JS resources in your project's base template. 
+3. Let ``PopupCrudViewSet`` know of your base template file name. This defaults 
+   to ``base.html``, but if your project uses a different base template 
+   filename, inform ``PopupCrudViewSet`` about it in ``settings.py``::
+
+        POPUPCRUD = {
+            'base_template': 'mybase.html',
+        }
+
+   Include Bootstrap CSS & JS resources in this base template.
    If you were to use ``django-bootstrap3`` tags for these, your base 
    template should look something like this::
 
@@ -31,15 +39,15 @@ Quickstart
         {% bootstrap_css %}
         <script src="{% bootstrap_jquery_url %}" type="text/javascript" charset="utf-8"></script>
         {% bootstrap_javascript %}
+        {% block extrahead %}{% endblock extrahead %}
     </head>
 
-   ``PopupCrudViewSet`` assumes that the base template name is ``base.html``.
-   If your project uses a different base template filename, inform 
-   ``PopupCrudViewSet`` about it in ``settings.py``::
-
-        POPUPCRUD = {
-            'base_template': 'mybase.html',
-        }
+   Also, define a block named ``extrahead`` within the ``<head>`` element.
+   ``PopupCrudViewSet`` views use a few custom CSS styles to show column 
+   sorting options and sort priority. These styles are defined in 
+   ``static/popupcrud/css/popupcrud.css`` which is inserted into 
+   the ``extrahead`` block. If you don't declare this block,
+   you will have to explicitly load the stylesheet into your base template.
 
 4. In your app's ``views.py``, create a ``ViewSet`` for each model for which you
    want to support CRUD operations.
@@ -89,5 +97,9 @@ Quickstart
         ]
 
 6. Thats it! Your modern HTML popup based CRUD for your table is up and running.
+
    PopupCrudViewSet has many options to customize the fields displayed in list
    view, form used for create/update operations, permission control and more.
+   These are documented in the `reference <reference.html>`_ section. The 
+   `How-to <howto.html>`_ guides also contain examples for a few typical use 
+   cases.
