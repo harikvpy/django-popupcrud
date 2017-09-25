@@ -133,4 +133,4 @@ environment where ``demo`` is run.
 
 License
 -------
-Distributed under MIT License. See `LICENSE <LICENSE>`_ file for details.
+Distributed under BSD 3-Clause License. See `LICENSE <LICENSE>`_ file for details.
