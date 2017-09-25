@@ -1,6 +1,5 @@
-=======
 How-tos
-=======
+-------
 
 Create CRUD views for a model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

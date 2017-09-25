@@ -13,4 +13,5 @@ Welcome to django-popupcrud's documentation!
    quickstart
    reference
    howto
+   demo
    settings
