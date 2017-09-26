@@ -10,3 +10,8 @@ History
 ++++++++++++++++++
 
 * Merge Quickstart section into README
+
+0.1.3 (2017-09-26)
+++++++++++++++++++
+
+* Add missing HISTORY.rst to manifst
