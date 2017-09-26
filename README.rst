@@ -5,6 +5,14 @@ django-popupcrud
 A CRUD framework leveraging Django's generic views that implements CRUD 
 operations through HTML popups.
 
+.. image:: https://img.shields.io/pypi/v/django-popucrud.svg
+    :target: https://pypi.python.org/pypi/django-popucrud
+        :alt: Latest PyPI version
+
+ .. image:: https://img.shields.io/pypi/dm/django-popucrud.svg
+    :target: https://pypi.python.org/pypi/django-popucrud
+        :alt: Number of PyPI downloads per month
+
 Requirements
 ------------
 
