@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 from django import forms
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, FieldDoesNotExist
 from django.shortcuts import render_to_response
 from django.views import generic
 from django.http import JsonResponse
@@ -270,7 +270,7 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
         Returns the proper model field name corresponding to the given
         field_name to use for ordering. field_name may either be the name of a
         proper model field or the name of a method (on the admin or model) or a
-        callable with the 'admin_order_field' attribute. Returns None if no
+        callable with the 'order_field' attribute. Returns None if no
         proper model field name can be matched.
         """
         try:
@@ -281,11 +281,11 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
             # that allows sorting.
             if callable(field_name):
                 attr = field_name
-            elif hasattr(self.model_admin, field_name):
-                attr = getattr(self.model_admin, field_name)
+            elif hasattr(self._viewset, field_name):
+                attr = getattr(self._viewset, field_name)
             else:
                 attr = getattr(self.model, field_name)
-            return getattr(attr, 'admin_order_field', None)
+            return getattr(attr, 'order_field', None)
 
     def _get_ordering(self, request, queryset):
         """
@@ -308,7 +308,7 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
                     field_name = self._viewset.list_display[int(idx)]
                     order_field = self.get_ordering_field(field_name)
                     if not order_field:
-                        continue  # No 'admin_order_field', skip it
+                        continue  # No 'order_field', skip it
                     # reverse order if order_field has already "-" as prefix
                     if order_field.startswith('-') and pfx == "-":
                         ordering.append(order_field[1:])
@@ -563,7 +563,15 @@ class PopupCrudViewSet(object):
     #: See ModelAdmin.list_display `documentation
     #: <https://docs.djangoproject.com/en/1.11/ref/contrib/admin/#django.contrib.admin.ModelAdmin.list_display>`_
     #: for examples.
-
+    #:
+    #: A note about ``list_display`` fields with respect to how it differs from
+    #: ``ModelAdmin``'s ``list_display``.
+    #:
+    #: In ``ModelAdmin``, if a field specified in ``list_display`` is not
+    #: a database field, it can be set as a sortable field by setting
+    #: the method's ``admin_order_field`` attribute to the relevant database
+    #: field that can be used as the sort field. In ``PopupCrudViewSet``, this
+    #: attribute is named ``order_Field``.
     list_display = ()
 
     #: A list of names of fields. This is interpreted the same as the Meta.fields

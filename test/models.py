@@ -19,4 +19,4 @@ class Author(models.Model):
 
     def double_age(self):
         return self.age*2
-    double_age.label = "Double Age"
+    double_age.short_description = "Double Age"

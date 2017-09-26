@@ -15,3 +15,10 @@ History
 ++++++++++++++++++
 
 * Add missing HISTORY.rst to manifst
+
+0.1.4 (2017-09-26)
+++++++++++++++++++
+
+* Support for ``order_field`` attribute for ``list_display`` method fields.
+  This works similar to ``ModelAdmin`` method fields' ``admin_order_field``
+  property.

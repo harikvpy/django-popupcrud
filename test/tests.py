@@ -34,10 +34,17 @@ class PopupCrudViewSetTests(TestCase):
     def test_list_display(self):
         author = Author.objects.create(name="John", age=26)
         response = self.client.get(reverse("authors"))
-        self.assertContains(response, "<th>Name</th>")
-        self.assertContains(response, "<th>Age</th>")
-        self.assertContains(response, "<th>Half Age</th>")
-        self.assertContains(response, "<th>Double Age</th>")
+        html = response.content.decode('utf-8')
+        self.assertTrue(
+            re.search(r'<th.*sortable.*>.*Name.*</th>', html, re.DOTALL))
+        self.assertTrue(
+            re.search(r'<th.*sortable.*>.*Age.*</th>', html, re.DOTALL))
+        self.assertTrue(
+            re.search(r'<th.*sortable.*>.*Half Age.*</th>', html, re.DOTALL))
+        self.assertTrue(
+            re.search(r'<th.*Double Age.*</th>', html, re.DOTALL))
+        self.assertFalse(
+            re.search(r'<th.*sortable.*>.*DOUBLE AGE.*</th>', html, re.DOTALL))
         # also tests the get_obj_name() method
         self.assertTrue(
             re.search(r'<td>John.*/div></td>', response.content.decode('utf-8')))
@@ -45,6 +52,9 @@ class PopupCrudViewSetTests(TestCase):
         self.assertContains(response, "<td>26</td>")
         self.assertContains(response, "<td>13</td>") # Author.half_age
         self.assertContains(response, "<td>52</td>") # AuthorCrudViewSet.double_age
+
+        # test half_age field header has sortable as it has 'order_field'
+        # attribute.
 
     def test_get_obj_name(self):
         # Also tests that unicode characters are rendered correctly

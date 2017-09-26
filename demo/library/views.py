@@ -46,6 +46,7 @@ class AuthorCrudViewset(PopupCrudViewSet):
     def half_age(self, author):
         return author.age/2
     half_age.label = "Half life"
+    half_age.order_field = 'age'
 
     def get_edit_url(self, obj):
         return reverse_lazy("library:edit-author", kwargs={'pk': obj.pk})

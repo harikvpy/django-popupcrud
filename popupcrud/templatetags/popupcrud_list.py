@@ -82,8 +82,8 @@ def list_display_headers(view, queryset):
             field_name = _coerce_field_name(field_name, i)
             # Potentially not sortable
 
-            admin_order_field = getattr(attr, "admin_order_field", None)
-            if not admin_order_field:
+            order_field = getattr(attr, "order_field", None)
+            if not order_field:
                 # Not sortable
                 yield {
                     "text": text,
