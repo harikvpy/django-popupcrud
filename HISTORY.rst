@@ -27,3 +27,9 @@ History
 ++++++++++++++++++
 
 * Better unicode support
+
+0.1.6 (2017-09-27)
+++++++++++++++++++
+
+* Better access control support through 'login_url' & 'raise_exception'
+  PopupCrudViewSet properties
