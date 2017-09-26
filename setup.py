@@ -10,9 +10,6 @@ with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as readme:
 with open(os.path.join(os.path.dirname(__file__), 'HISTORY.rst')) as history:
     HISTORY = history.read()
 
-with open(os.path.join(os.path.dirname(__file__), 'quickstart.rst')) as quickstart:
-    QUICKSTART = quickstart.read()
-
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
@@ -20,7 +17,7 @@ setup(
     name='django-popupcrud',
     version=version,
     description='A CRUD framework that uses HTML popups for CRUD operations.',
-    long_description=README + '\n\n' + QUICKSTART + '\n\n' + HISTORY,
+    long_description=README + '\n\n' + HISTORY,
     license='BSD 3-Clause License',
     packages=[
         'popupcrud'
