@@ -9,7 +9,7 @@ operations through HTML popups.
     :target: https://pypi.python.org/pypi/django-popucrud
         :alt: Latest PyPI version
 
- .. image:: https://img.shields.io/pypi/dm/django-popucrud.svg
+.. image:: https://img.shields.io/pypi/dm/django-popucrud.svg
     :target: https://pypi.python.org/pypi/django-popucrud
         :alt: Number of PyPI downloads per month
 
