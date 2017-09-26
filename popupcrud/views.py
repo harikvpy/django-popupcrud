@@ -165,6 +165,36 @@ class AttributeThunk(object):
         kwargs[title_cv] = self._viewset.get_page_title()
         return super(AttributeThunk, self).get_context_data(**kwargs)
 
+    @property
+    def login_url(self):
+        # If view specific attribute is set in PopupCrudViewSet, return it.
+        # Otherwise, return the ViewSet global 'login_url' attr value.
+        return getattr(self._viewset,
+                       "%s_login_url" % self._get_view_code(),
+                       self._viewset.login_url)
+
+    @property
+    def raise_exception(self):
+        # If view specific attribute is set in PopupCrudViewSet, return it.
+        # Otherwise, return the ViewSet global 'raise_exception' attr value.
+        return getattr(self._viewset,
+                       "%s_raise_exception" % self._get_view_code(),
+                       self._viewset.raise_exception)
+
+    def get_permission_required(self):
+        return self._viewset.get_permission_required(self._get_view_code())
+
+    def _get_view_code(self):
+        """ Returns the short code for this ViewSet view """
+        codes = {
+            'ListView': 'list',
+            'DetailView': 'detail',
+            'CreateView': 'create',
+            'UpdateView': 'update',
+            'DeleteView': 'delete'
+        }
+        return codes[self.__class__.__name__]
+
 
 class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
                generic.ListView):
@@ -182,8 +212,6 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
 
     def get_queryset(self):
         qs = super(ListView, self).get_queryset()
-        # TODO: 2017年09月06日 (週三) 06時13分10秒
-        #		Apply custom ordering based on GET arguments
 
         # Apply any filters
 
@@ -207,9 +235,6 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
         # determined by default -- <model>_list.html
         templates.append("popupcrud/list.html")
         return templates
-
-    def get_permission_required(self):
-        return self._viewset.get_permission_required('list')
 
     def get_context_data(self, **kwargs):
         context = super(ListView, self).get_context_data(**kwargs)
@@ -418,9 +443,6 @@ class CreateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
         kwargs['form_url'] = self._viewset.get_new_url()
         return super(CreateView, self).get_context_data(**kwargs)
 
-    def get_permission_required(self):
-        return self._viewset.get_permission_required('create')
-
     # def get_form_class(self):
     #     if getattr(self._viewset, 'form_class', None):
     #         return self._viewset.form_class
@@ -430,9 +452,6 @@ class CreateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
 class DetailView(AttributeThunk, PermissionRequiredMixin, generic.DetailView):
     def __init__(self, viewset_cls, *args, **kwargs):
         super(DetailView, self).__init__(viewset_cls, *args, **kwargs)
-
-    def get_permission_required(self):
-        return self._viewset.get_permission_required('read')
 
 
 class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
@@ -448,9 +467,6 @@ class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
         kwargs['pagetitle'] = _("Edit {0}").format(self._viewset.model._meta.verbose_name)
         kwargs['form_url'] = self._viewset.get_edit_url(self.object)
         return super(UpdateView, self).get_context_data(**kwargs)
-
-    def get_permission_required(self):
-        return self._viewset.get_permission_required('update')
 
     # def get_form_class(self):
     #     if getattr(self._viewset, 'form_class', None):
@@ -500,9 +516,6 @@ class DeleteView(AttributeThunk, PermissionRequiredMixin, generic.DeleteView):
                 self._viewset.model._meta.verbose_name,
                 str(self.object)))
             return retval
-
-    def get_permission_required(self):
-        return self._viewset.get_permission_required('delete')
 
 
 class PopupCrudViewSet(object):
@@ -647,6 +660,14 @@ class PopupCrudViewSet(object):
     #:
     #: This is disabled by default.
     legacy_crud = False
+
+    #: Same as ``django.contrib.auth.mixins.AccessMixin`` ``login_url``, but
+    #: applicable for all CRUD views.
+    login_url = None
+
+    #: Same as ``django.contrib.auth.mixins.AccessMixin`` ``raise_exception``,
+    #: but applicable for all CRUD views.
+    raise_exception = False
 
     @classonlymethod
     def _generate_view(cls, crud_view_class, **initkwargs):
