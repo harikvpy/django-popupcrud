@@ -22,3 +22,8 @@ History
 * Support for ``order_field`` attribute for ``list_display`` method fields.
   This works similar to ``ModelAdmin`` method fields' ``admin_order_field``
   property.
+
+0.1.5 (2017-09-26)
+++++++++++++++++++
+
+* Better unicode support
