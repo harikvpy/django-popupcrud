@@ -7,11 +7,11 @@ operations through HTML popups.
 
 .. image:: https://img.shields.io/pypi/v/django-popupcrud.svg
     :target: https://pypi.python.org/pypi/django-popupcrud
-        :alt: Latest PyPI version
+    :alt: Latest PyPI version
 
 .. image:: https://img.shields.io/pypi/dm/django-popupcrud.svg
     :target: https://pypi.python.org/pypi/django-popupcrud
-        :alt: Number of PyPI downloads per month
+    :alt: Number of PyPI downloads per month
 
 Requirements
 ------------
