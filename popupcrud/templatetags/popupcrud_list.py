@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """ PopupCRUD list view template tags """
+import six
 
 from django.core.exceptions import FieldDoesNotExist
 from django.db.models.fields.related import RelatedField
@@ -192,18 +193,11 @@ def list_field_value(view, obj, field, context, index):
 
 
 def render_item_actions(context, obj):
-    edit_template = """
-    <a name="create_edit_object" data-url="{0}" data-title="{1}" href="javascript:void(0);"><span class="glyphicon glyphicon-pencil" title="{1}"></span></a>
-    """
-    delete_template = """
-    <a name="delete_object" data-url="{0}" data-title="{1}" href="javascript:void(0);"><span class="glyphicon glyphicon-trash" title="{1}"></span></a>
-    """
-    legacy_edit_template = """
-    <a href="{0}"><span class="glyphicon glyphicon-pencil" title="{1}"></span></a>
-    """
-    legacy_delete_template = """
-    <a href="{0}"><span class="glyphicon glyphicon-trash" title="{1}"></span></a>
-    """
+    edit_template = six.text_type('<a name="create_edit_object" data-url="{0}" data-title="{1}" href="javascript:void(0);"><span class="glyphicon glyphicon-pencil" title="{1}"></span></a>')
+    delete_template = six.text_type('<a name="delete_object" data-url="{0}" data-title="{1}" href="javascript:void(0);"><span class="glyphicon glyphicon-trash" title="{1}"></span></a>')
+
+    legacy_edit_template = six.text_type('<a href="{0}"><span class="glyphicon glyphicon-pencil" title="{1}"></span></a>')
+    legacy_delete_template = six.text_type('<a href="{0}"><span class="glyphicon glyphicon-trash" title="{1}"></span></a>')
 
     view = context['view']
     edit_url = view._viewset.get_edit_url(obj)
