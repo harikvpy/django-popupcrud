@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """ PopupCRUD list view template tags """
-import six
 
 from django.core.exceptions import FieldDoesNotExist
 from django.db.models.fields.related import RelatedField
@@ -9,6 +8,7 @@ from django.template import Library
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext
 from django.utils.html import format_html
+from django.utils import six
 from django.contrib.admin.utils import lookup_field,label_for_field as lff
 
 register = Library()
