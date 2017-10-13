@@ -5,6 +5,7 @@ import json
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 from django.http import JsonResponse
+from django.utils import six
 
 from .models import Author
 from .views import AuthorCrudViewset
@@ -32,7 +33,8 @@ class PopupCrudViewSetTests(TestCase):
                 re.search(pattern, response.content.decode('utf-8')))
 
     def test_list_display(self):
-        author = Author.objects.create(name="John", age=26)
+        name = "John"
+        author = Author.objects.create(name=name, age=26)
         response = self.client.get(reverse("authors"))
         html = response.content.decode('utf-8')
         self.assertTrue(
@@ -46,9 +48,13 @@ class PopupCrudViewSetTests(TestCase):
         self.assertFalse(
             re.search(r'<th.*sortable.*>.*DOUBLE AGE.*</th>', html, re.DOTALL))
         # also tests the get_obj_name() method
-        self.assertTrue(
-            re.search(r'<td>John.*/div></td>', response.content.decode('utf-8')))
-        #self.assertContains(response, "<td>John.*/div></td>")
+        first_col = """<a name="object_detail" data-url="{0}" data-title="Author Detail" href="javascript:void(0);">{1}</a><div data-name=\'{1} - 26\'></div>"""
+        self.assertContains(
+            response,
+            first_col.format(
+                reverse("author-detail", kwargs={'pk': author.pk}),
+                name)
+        )
         self.assertContains(response, "<td>26</td>")
         self.assertContains(response, "<td>13</td>") # Author.half_age
         self.assertContains(response, "<td>52</td>") # AuthorCrudViewSet.double_age
@@ -58,9 +64,17 @@ class PopupCrudViewSetTests(TestCase):
 
     def test_get_obj_name(self):
         # Also tests that unicode characters are rendered correctly
-        author = Author.objects.create(name="何瑞理", age=46)
+        name = "何瑞理"
+        author = Author.objects.create(name=name, age=46)
         response = self.client.get(reverse("authors"))
-        self.assertContains(response, "<td>何瑞理<div data-name=\'何瑞理 - 46\'></div></td>")
+        first_col = """<a name="object_detail" data-url="{0}" data-title="Author Detail" href="javascript:void(0);">{1}</a><div data-name=\'{1} - 46\'></div>"""
+        self.assertContains(
+            response,
+            first_col.format(
+                reverse("author-detail", kwargs={'pk': author.pk}),
+                name)
+        )
+        # "<div data-name=\'Peter Parker - 46\'></div>")
 
     def test_page_title(self):
         author = Author.objects.create(name="John", age=26)
@@ -83,6 +97,7 @@ class PopupCrudViewSetTests(TestCase):
         for obj in Author.objects.all():
             self.assertContains(response, AuthorCrudViewset().get_edit_url(obj))
             self.assertContains(response, AuthorCrudViewset().get_delete_url(obj))
+            self.assertContains(response, AuthorCrudViewset().get_detail_url(obj))
 
     def test_pagination(self):
         for _ in range(0, 30):
@@ -133,3 +148,9 @@ class PopupCrudViewSetTests(TestCase):
         john.refresh_from_db()
         self.assertEquals(john.name, 'Peter')
 
+    def test_detail(self):
+        john = Author.objects.create(name="John", age=25)
+        url = reverse("author-detail", kwargs={'pk': john.pk})
+        response = self.client.get(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertTemplateUsed(response, "popupcrud/detail.html")
+        self.assertContains(response, "John")
