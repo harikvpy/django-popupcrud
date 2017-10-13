@@ -76,6 +76,9 @@ class BookCrudViewset(PopupCrudViewSet):
     def get_delete_url(obj):
         return reverse_lazy("library:delete-book", kwargs={'pk': obj.pk})
 
+    @staticmethod
+    def get_detail_url(obj):
+        return reverse_lazy("library:book-detail", kwargs={'pk': obj.pk})
 
 class AuthorRatingForm(forms.Form):
     author = forms.ModelChoiceField(queryset=Author.objects.all())

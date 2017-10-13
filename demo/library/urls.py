@@ -15,6 +15,7 @@ urlpatterns = [
 
     url(r'^books/$', views.BookCrudViewset.list(), name='books'),
     url(r'^books/new/$', views.BookCrudViewset.create(), name='new-book'),
+    url(r'^books/(?P<pk>\d+)/$', views.BookCrudViewset.detail(), name='book-detail'),
     url(r'^books/(?P<pk>\d+)/edit/$', views.BookCrudViewset.update(), name='edit-book'),
     url(r'^books/(?P<pk>\d+)/delete/$', views.BookCrudViewset.delete(), name='delete-book'),
 
