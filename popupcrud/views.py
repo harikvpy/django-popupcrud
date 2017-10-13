@@ -763,6 +763,18 @@ class PopupCrudViewSet(object):
         placed in the URL namespace such that ViewSet can generate the
         appropriate href to the item detail hyperlink in list view.
         argument.
+
+        When this hyperlink is clicked, a popup containing the
+        object's detail will be shown. By default this popup only shows the
+        object's string representation. To show additional information in this
+        popup, implement `<object>_detail.html' in your project, typically in
+        the app's template folder. If this file exists, it will be used to
+        render the object detail popup. True to Django
+        `views.generic.DetailView` convention, you may use the `{{ object }}`
+        template variable to access the object.
+
+        Default implementations returns None, which results in object detail
+        popup being disabled.
         """
         return None
 
