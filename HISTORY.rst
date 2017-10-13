@@ -33,3 +33,8 @@ History
 
 * Better access control support through 'login_url' & 'raise_exception'
   PopupCrudViewSet properties
+
+0.1.7 (2017-10-13)
+++++++++++++++++++
+
+* Object detail view support 
