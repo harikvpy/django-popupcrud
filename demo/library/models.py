@@ -34,8 +34,8 @@ class Book(models.Model):
 
     class Meta:
         ordering = ('title',)
-        verbose_name = "Book"
-        verbose_name_plural = "Books"
+        #verbose_name = "Book"
+        #verbose_name_plural = "Books"
 
     def __str__(self):
         return self.title

@@ -13,18 +13,18 @@ urlpatterns = [
     url(r'^authors/(?P<pk>\d+)/edit/$', views.AuthorCrudViewset.update(), name='edit-author'),
     url(r'^authors/(?P<pk>\d+)/delete/$', views.AuthorCrudViewset.delete(), name='delete-author'),
 
-    url(r'^books/$', views.BookCrudViewset.list(), name='books'),
-    url(r'^books/new/$', views.BookCrudViewset.create(), name='new-book'),
-    url(r'^books/(?P<pk>\d+)/$', views.BookCrudViewset.detail(), name='book-detail'),
-    url(r'^books/(?P<pk>\d+)/edit/$', views.BookCrudViewset.update(), name='edit-book'),
-    url(r'^books/(?P<pk>\d+)/delete/$', views.BookCrudViewset.delete(), name='delete-book'),
-
     url(r'^rating/author/$', views.AuthorRatingView.as_view(), name='author-rating'),
     url(r'^rating/book/$', views.BookRatingView.as_view(), name='book-rating'),
     url(r'^mro/$', views.MultipleRelatedObjectDemoView.as_view(), name='multi-related-object-demo'),
 
-    url(r'^titles/', include(views.BookCrudViewset.views(), namespace='titles')),
+    url(r'^books/', views.BookCrudViewset.urls()),
 ]
+
+#     url(r'^books/$', views.BookCrudViewset.list(), name='books'),
+#     url(r'^books/new/$', views.BookCrudViewset.create(), name='new-book'),
+#     url(r'^books/(?P<pk>\d+)/$', views.BookCrudViewset.detail(), name='book-detail'),
+#     url(r'^books/(?P<pk>\d+)/edit/$', views.BookCrudViewset.update(), name='edit-book'),
+#     url(r'^books/(?P<pk>\d+)/delete/$', views.BookCrudViewset.delete(), name='delete-book'),
 
 urlpatterns += [
     url(r'^writers/', include((author_admin.get_urls(), 'library'), namespace='writers')),
