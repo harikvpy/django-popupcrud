@@ -22,6 +22,8 @@ urlpatterns = [
     url(r'^rating/author/$', views.AuthorRatingView.as_view(), name='author-rating'),
     url(r'^rating/book/$', views.BookRatingView.as_view(), name='book-rating'),
     url(r'^mro/$', views.MultipleRelatedObjectDemoView.as_view(), name='multi-related-object-demo'),
+
+    url(r'^titles/', include(views.BookCrudViewset.views(), namespace='titles')),
 ]
 
 urlpatterns += [

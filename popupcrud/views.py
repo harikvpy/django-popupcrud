@@ -6,6 +6,7 @@ from collections import OrderedDict
 
 from django import forms
 from django.conf import settings
+from django.conf.urls import include, url
 from django.core.exceptions import ImproperlyConfigured, FieldDoesNotExist
 from django.shortcuts import render_to_response
 from django.views import generic
@@ -851,3 +852,22 @@ class PopupCrudViewSet(object):
         #: pagination. By default this simply returns the value of
         #: ``paginate_by``.
         return self.paginate_by
+
+    @classonlymethod
+    def views(cls, views=('create', 'update', 'delete', 'detail')):
+        # start with only list url, the rest are optional based on views arg
+        urls = [url(r'$', cls.list(), name='list')]
+
+        if 'detail' in views:
+            urls.insert(0, url(r'(?P<pk>\d+)/$', cls.detail(), name='detail'))
+
+        if 'delete' in views:
+            urls.insert(0, url(r'(?P<pk>\d+)/delete/$', cls.delete(), name='delete'))
+
+        if 'update' in views:
+            urls.insert(0, url(r'(?P<pk>\d+)/update/$', cls.update(), name='update'))
+
+        if 'create' in views:
+            urls.insert(0, url(r'create/$', cls.create(), name='create'))
+
+        return urls
