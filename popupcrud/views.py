@@ -449,7 +449,12 @@ class CreateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
     #     return super(CreateView, self).get_form_class()
 
 
-class DetailView(AttributeThunk, PermissionRequiredMixin, generic.DetailView):
+class DetailView(AttributeThunk, TemplateNameMixin, PermissionRequiredMixin,
+                 generic.DetailView):
+
+    popupcrud_template_name = "detail_template"
+    detail_template = "popupcrud/detail.html"
+
     def __init__(self, viewset_cls, *args, **kwargs):
         super(DetailView, self).__init__(viewset_cls, *args, **kwargs)
 
@@ -616,7 +621,7 @@ class PopupCrudViewSet(object):
 
     #: List of permission names for the detail view.
     #: Defaults to no permissions, meaning no permission is required.
-    read_permission_required = ()
+    detail_permission_required = ()
 
     #: List of permission names for the update view.
     #: Defaults to no permissions, meaning no permission is required.
@@ -722,7 +727,7 @@ class PopupCrudViewSet(object):
         return cls._generate_view(CreateView, **initkwargs)
 
     @classonlymethod
-    def read(cls, **initkwargs):
+    def detail(cls, **initkwargs):
         """Returns the create view that can be specified as the second argument
         to url() in urls.py.
         """
@@ -797,11 +802,11 @@ class PopupCrudViewSet(object):
         """
         Return the permission required for the CRUD operation specified in op.
         Default implementation returns the value of one
-        ``{list|create|read|update|delete}_permission_required`` class attributes.
+        ``{list|create|detail|update|delete}_permission_required`` class attributes.
         Overriding this allows you to return dynamically computed permissions.
 
         :param op: The CRUD operation code. One of
-            ``{'list'|'create'|'read'|'update'|'delete'}``.
+            ``{'list'|'create'|'detail'|'update'|'delete'}``.
 
         :rtype:
             The ``permission_required`` tuple for the specified operation.
@@ -810,7 +815,7 @@ class PopupCrudViewSet(object):
                 permission_table = {
                     'list': self.list_permission_required,
                     'create': self.create_permission_required,
-                    'read': self.read_permission_required,
+                    'detail': self.detail_permission_required,
                     'update': self.update_permission_required,
                     'delete': self.delete_permission_required
                 }
@@ -818,7 +823,7 @@ class PopupCrudViewSet(object):
         permission_table = {
             'list': self.list_permission_required,
             'create': self.create_permission_required,
-            'read': self.read_permission_required,
+            'detail': self.detail_permission_required,
             'update': self.update_permission_required,
             'delete': self.delete_permission_required
         }

@@ -183,11 +183,13 @@ def list_field_value(view, obj, field, context, index):
     if index == 0:
         detail_url = view._viewset.get_detail_url(obj)
         if detail_url:
-            value = '<a name="object_detail" data-url="{0}" href="javascript:void(0);">{1}</a>'.format(
-                detail_url, value)
+            title = ugettext("{0} Detail").format(
+                view._viewset.model._meta.verbose_name)
+            value = six.text_type('<a name="object_detail" data-url="{0}" data-title="{2}" href="javascript:void(0);">{1}</a>').format(
+                detail_url, value, title)
 
-        return mark_safe("%s<div data-name='%s'></div>" % (
-            value, view._viewset.get_obj_name(obj)))
+        return mark_safe(six.text_type("{0}<div data-name='{1}'></div>").format(
+                value, view._viewset.get_obj_name(obj)))
 
     return value
 

@@ -26,6 +26,10 @@
     {# modal body will be filled in by jQuery.load(<new_object_url>) return value #}
     ??
 {% endbsmodal %}
+{% bsmodal '??' 'detail-modal' close_title_button=Yes header_bg_css=bg-primary %}
+    {# modal body will be filled in by jQuery.load(<object_detail_url>) return value #}
+    ??
+{% endbsmodal %}
 {% trans 'Confirm Delete' as confirm_delete_title %}
 {% bsmodal confirm_delete_title 'delete-modal' close_title_button=Yes header_bg_css=bg-primary %}
     <strong>{{ model_options.verbose_name }}:</strong><br/> <span id='id_object_name'></span><br/>

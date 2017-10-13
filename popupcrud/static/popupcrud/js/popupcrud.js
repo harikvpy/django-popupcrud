@@ -52,6 +52,16 @@ $(document).ready(function() {
         });
     });
   });
+  // handler for object detail view
+  $("[name=object_detail]").click(function(evtObj) {
+    evtObj.preventDefault();
+    var url = $(this).data('url');
+    var title = $(this).data('title');
+    $('#detail-modal .modal-body').load(url, function () {
+      $('#detail-modal .modal-title').text(title);
+      $('#detail-modal').modal('show');
+    });
+  });
   // delete an object action handler
   $("a[name='delete_object']").click(function(evtObj) {
     evtObj.preventDefault();
