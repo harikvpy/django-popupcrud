@@ -761,8 +761,7 @@ class PopupCrudViewSet(object):
     def get_detail_url(self, obj):
         """ Override this returning the URL where ``PopupCrudViewSet.detail()``
         is placed in the URL namespace such that ViewSet can generate the
-        appropriate href to the item detail hyperlink in list view.
-        argument.
+        appropriate href to display item detail in list view.
 
         When this hyperlink is clicked, a popup containing the
         object's detail will be shown. By default this popup only shows the
