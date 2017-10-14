@@ -1,7 +1,7 @@
 {% extends base_template %}
 {% load i18n static bootstrap3 popupcrud_list bsmodal %}
 {% block extrahead %}
-<link rel="stylesheet" href="{% static 'popupcrud/css/popupcrud.css' %}" type="text/css" media="screen" title="no title" charset="utf-8">
+{{ view.media }}
 {% endblock extrahead %}
 {% block content %}
 {% block create_new %}
@@ -50,6 +50,5 @@
         <button type="button" class="btn btn-default" data-dismiss="modal">{% trans 'Close' %}</button>
     </div>
 {% endbsmodal %}
-<script src="{% static 'popupcrud/js/popupcrud.js' %}" type="text/javascript" charset="utf-8"></script>
 {% endif %} {# legacy_crud #}
 {% endblock content %}
