@@ -96,21 +96,14 @@ $(document).ready(function() {
   // modal dialog can be loaded with the respective url form content and 
   // activated in a generic manner from a Javascript function.
   var bindAddAnother = function(elem) {
-    // modal dialog template that'll be added at the end of the <body> tag
-    var createRelatedModal = `
-      <div class="modal fade" id="create-related-modal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-top" role="document">
-            <div class="modal-content">
-                <div class="modal-header bg-primary">
-                    <button type="button" class="close" data-dismiss="modal" aria-label=""><span aria-hidden="true">×</span></button>
-                    <h4 class="modal-title">Title</h4>
-                </div>
-                <div class="modal-body">
-                </div>
-            </div>
-        </div>
-      </div>
-    `;
+    // Modal dialog template derived from #create-edit-modal that'll be added at 
+    // the end of the <body> tag.
+    var modalTemplate = $('<div/>').html($("#create-edit-modal")[0].outerHTML);
+    $(modalTemplate)
+      .find('.modal').attr('id', 'create-related-modal')
+      .find('.modal-title').html('')
+      .find('.modal-body').html('')
+    var createRelatedModal = modalTemplate.html();
     elem.find(".add-another").each(function(index, elem) {
       var modalId = $(elem).attr('id') + '-modal';
       if ($("#"+modalId).length == 0) {
@@ -130,7 +123,7 @@ $(document).ready(function() {
     //  3. The activated modal's title is set to <a> element's text content.
     //  4. If the activated form submission was successful, the sibling 'select'
     //     element is popuplated with an <option> for the just added element.
-    $(".add-another").click(function(evtObj) {
+    $(elem).find(".add-another").click(function(evtObj) {
       var url = $(this).data('url');
       var title = $(this).text();
       var select = $(this).prevAll('select');
@@ -165,5 +158,22 @@ $(document).ready(function() {
     setTimeout(function() {
       $('.modal-backdrop').not('.modal-stack').css('z-index', zIndex - 1).addClass('modal-stack');
     }, 0);
+  });
+  $(document).on('shown.bs.modal', '.modal', function (event) {
+    /* 
+     * Initialize any django-select2 fields in the dialog. If the dialog does
+     * not have any select2 fields, this code does nothing.
+     *
+     * Also this is a template for any custom initialization to be done
+     * by user javascript codes. Typically if the user code has to do UI level
+     * processing, it does it from $(document).ready(). But for UI processing
+     * on modal dialogs, it has to be done from $(document).on('shown.bs.modal').
+     */
+    var sels = $(this).find('.django-select2');
+    if (sels.length > 0) {
+      $(sels).djangoSelect2({
+        dropdownParent: $(this)
+      });
+    }
   });
 });
