@@ -57,9 +57,24 @@ class AuthorCrudViewset(PopupCrudViewSet):
         return reverse_lazy("library:delete-author", kwargs={'pk': obj.pk})
 
 
+class BookForm(forms.ModelForm):
+    class Meta:
+        model = Book
+        fields = ('title', 'author')
+
+    def __init__(self, *args, **kwargs):
+        super(BookForm, self).__init__(*args, **kwargs)
+        author = self.fields['author']
+        author.widget = RelatedFieldPopupFormWidget(
+            widget=Select2Widget(choices=author.choices) if _select2 else \
+                    forms.Select(choices=author.choices),
+            new_url=reverse_lazy("library:new-author"))
+
+
 class BookCrudViewset(PopupCrudViewSet):
     model = Book
-    fields = ('title', 'author')
+    form_class = BookForm
+    #fields = ('title', 'author')
     list_display = ('title', 'author')
     list_url = reverse_lazy("library:books:list")
     new_url = reverse_lazy("library:books:create")
@@ -138,7 +153,7 @@ class MultipleRelatedObjectForm(forms.Form):
         book = self.fields['book']
         book.widget = RelatedFieldPopupFormWidget(
             widget=forms.Select(choices=book.choices),
-            new_url=reverse_lazy("library:new-book"))
+            new_url=reverse_lazy("library:books:create"))
 
 
 class MultipleRelatedObjectDemoView(generic.FormView):
