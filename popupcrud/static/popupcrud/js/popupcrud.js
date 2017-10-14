@@ -136,7 +136,14 @@ $(document).ready(function() {
         submitModalForm(modal.find('#create-edit-form'), '#'+modalId, 
           function(xhr) {
             $(select).append($("<option></option>").
-              attr("value", xhr.pk).text(xhr.name)).val(xhr.pk).trigger('change');
+              attr("value", xhr.pk).text(xhr.name));
+            var newVal = $(select).val();
+            if ($(select).attr('multiple')) {
+              newVal.push(xhr.pk);
+            } else {
+              newVal = xhr.pk;
+            }
+            $(select).val(newVal).trigger('change');
           })
       });
     });
