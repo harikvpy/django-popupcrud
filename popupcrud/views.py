@@ -208,6 +208,18 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
         self.query = request.GET.get(SEARCH_VAR, '')
         self.lookup_opts = self.model._meta
 
+    @property
+    def media(self):
+        popupcrud_media = forms.Media(
+            css={'all': ('popupcrud/css/popupcrud.css',)},
+            js=('popupcrud/js/popupcrud.js',))
+
+        # Can't we load media of forms created using modelform_factory()?
+        # Need to investigate.
+        if self._viewset.form_class:
+            popupcrud_media += self._viewset.form_class().media
+        return popupcrud_media
+
     def get_paginate_by(self, queryset):
         return self._viewset.get_paginate_by()
 
