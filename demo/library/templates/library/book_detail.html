@@ -1,2 +1,5 @@
-{{ object.title }}<br/>
-{{ object.author }}
+{% extends "base.html" %}
+{% load i18n bootstrap3 %}
+{% block content %}
+{% include "library/book_detail_inner.html" %}
+{% endblock %}

@@ -7,7 +7,7 @@
 {% block create_new %}
 {% if new_url %}
 <div>
-{% if legacy_crud %}
+{% if not viewset.popups.create %}
     <a class="btn btn-primary" href="{{ new_url }}" type="link">{{ new_button_text }}</a>
 {% else %}
     <a class="btn btn-primary" href="javascript:void(0);" name="create_edit_object" type="link" data-url="{{ new_url }}" data-title="{{ new_button_text }}">{{ new_button_text }}</a>
@@ -21,16 +21,22 @@
 {% else %}
 <p>{% block empty_table_label %}{% trans "No items." %}{% endblock empty_table_label %}</p>
 {% endif %}
-{% if not legacy_crud %}
+{{ viewset.popups.create }}
+{{ viewset.popups.create }}
+{% if viewset.popups.create or viewset.popups.update %}
 {% bsmodal '??' 'create-edit-modal' close_title_button=Yes header_bg_css=bg-primary %}
     {# modal body will be filled in by jQuery.load(<new_object_url>) return value #}
     ??
 {% endbsmodal %}
+{% endif %} {# {% if viewset.popups.create or viewset.popups.update %} #}
+{% if viewset.popups.detail %}
 {% bsmodal '??' 'detail-modal' close_title_button=Yes header_bg_css=bg-primary %}
     {# modal body will be filled in by jQuery.load(<object_detail_url>) return value #}
     ??
 {% endbsmodal %}
+{% endif %} {#{% if viewset.popups.detail %} #}
 {% trans 'Confirm Delete' as confirm_delete_title %}
+{% if viewset.popups.delete %}
 {% bsmodal confirm_delete_title 'delete-modal' close_title_button=Yes header_bg_css=bg-primary %}
     <strong>{{ model_options.verbose_name }}:</strong><br/> <span id='id_object_name'></span><br/>
     <br/>
@@ -50,5 +56,5 @@
         <button type="button" class="btn btn-default" data-dismiss="modal">{% trans 'Close' %}</button>
     </div>
 {% endbsmodal %}
-{% endif %} {# legacy_crud #}
+{% endif %} {# if viewset.popups.delete %} #}
 {% endblock content %}

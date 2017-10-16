@@ -74,13 +74,15 @@ class BookForm(forms.ModelForm):
 class BookCrudViewset(PopupCrudViewSet):
     model = Book
     form_class = BookForm
-    #fields = ('title', 'author')
     list_display = ('title', 'author')
     list_url = reverse_lazy("library:books:list")
     new_url = reverse_lazy("library:books:create")
     #paginate_by = None # disable pagination
     related_object_popups = {
         'author': reverse_lazy("library:new-author")
+    }
+    legacy_crud = {
+        'create': False
     }
 
     @staticmethod
@@ -94,6 +96,7 @@ class BookCrudViewset(PopupCrudViewSet):
     @staticmethod
     def get_detail_url(obj):
         return reverse_lazy("library:books:detail", kwargs={'pk': obj.pk})
+
 
 class AuthorRatingForm(forms.Form):
     author = forms.ModelChoiceField(queryset=Author.objects.all())

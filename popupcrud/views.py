@@ -86,17 +86,6 @@ class AjaxObjectFormMixin(object):
     of releated objects from a popup without leaving the context of the model
     object view being created/edited.
     """
-    _supports_ajax_object_op = False
-
-    def dispatch(self, request, *args, **kwargs): # pylint: disable=missing-docstring
-        if request.is_ajax():
-            if not hasattr(self, 'ajax_template_name'):
-                self.ajax_template_name = "popupcrud/form_inner.html"
-            self.template_name = self.ajax_template_name
-            self._supports_ajax_object_op = True
-
-        return super(AjaxObjectFormMixin, self).dispatch(request, *args, **kwargs)
-
     def get_ajax_response(self):
         return JsonResponse({
             'name': str(self.object), # object representation
@@ -127,7 +116,7 @@ class AjaxObjectFormMixin(object):
 
     def form_valid(self, form): # pylint: disable=missing-docstring
         retval = super(AjaxObjectFormMixin, self).form_valid(form)
-        if self.request.is_ajax() and self._supports_ajax_object_op:
+        if self.request.is_ajax():
             return self.get_ajax_response()
         return retval
 
@@ -164,6 +153,7 @@ class AttributeThunk(object):
         kwargs['base_template'] = POPUPCRUD['base_template']
         title_cv = POPUPCRUD['page_title_context_variable']
         kwargs[title_cv] = self._viewset.get_page_title()
+        kwargs['viewset'] = self._viewset
         return super(AttributeThunk, self).get_context_data(**kwargs)
 
     @property
@@ -423,15 +413,22 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
 
 class TemplateNameMixin(object):
     """
-    Add popupcrud/form.html as a secondary choice template to the template
-    name list
+    Mixin adds the ViewSet attribute, set by 'popupcrud_template_name` view
+    attribute value, as one of the templates to the list of templates to be
+    looked up for rendering the view.
+
+    And if the incoming request is an AJAX request, it replaces all the template
+    filenames with '_inner' such that site common embellishments are removed
+    while rendering the view content inside a modal popup. Of course it's assumed
+    that the '_inner.html' template is written as a pure template, which doesn't
+    derive from the site common base template.
     """
     def get_template_names(self):
         templates = super(TemplateNameMixin, self).get_template_names()
 
         # if the viewset customized listview template, make sure that is
         # looked for first by putting its name in the front of the list
-        template_attr_name = getattr(self, "popupcrud_template_name")
+        template_attr_name = getattr(self, "popupcrud_template_name", None)
 
         if hasattr(self._viewset, template_attr_name):
             templates.insert(0, getattr(self._viewset, template_attr_name))
@@ -439,6 +436,16 @@ class TemplateNameMixin(object):
         # make the default template of lower priority than the one
         # determined by default -- <model>_list.html
         templates.append(getattr(self, template_attr_name))
+
+        if self.request.is_ajax():
+            # If this is an AJAX request, replace all the template names with
+            # their <template_name>_inner.html counterparts.
+            # These 'inner' templates are expected to be a bare-bones templates,
+            # sans the base template's site-common embellishments.
+            for index, template in enumerate(templates):
+                parts = template.split('.')
+                templates[index] = "{0}_inner.{1}".format(parts[0], parts[1])
+
         return templates
 
 
@@ -455,11 +462,6 @@ class CreateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
         kwargs['pagetitle'] = ugettext("New {0}").format(self._viewset.model._meta.verbose_name)
         kwargs['form_url'] = self._viewset.get_new_url()
         return super(CreateView, self).get_context_data(**kwargs)
-
-    # def get_form_class(self):
-    #     if getattr(self._viewset, 'form_class', None):
-    #         return self._viewset.form_class
-    #     return super(CreateView, self).get_form_class()
 
 
 class DetailView(AttributeThunk, TemplateNameMixin, PermissionRequiredMixin,
@@ -485,11 +487,6 @@ class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
         kwargs['pagetitle'] = _("Edit {0}").format(self._viewset.model._meta.verbose_name)
         kwargs['form_url'] = self._viewset.get_edit_url(self.object)
         return super(UpdateView, self).get_context_data(**kwargs)
-
-    # def get_form_class(self):
-    #     if getattr(self._viewset, 'form_class', None):
-    #         return self._viewset.form_class
-    #     return super(UpdateView, self).get_form_class()
 
 
 class DeleteView(AttributeThunk, PermissionRequiredMixin, generic.DeleteView):
@@ -671,12 +668,34 @@ class PopupCrudViewSet(object):
 
     ordering = None
 
-    #: Enables legacy CRUD views where each of the Create, Update & Delete views
-    #: are performed from their own templated views. That is, clicking on the
-    #: relevant action link on the list view takes you to its own dedicated
-    #: action page like Django's admin.
+    #: Enables legacy CRUD views where each of the Create, Detail, Update &
+    #: Delete views are performed from their own dedicated web views like Django
+    #: admin (hence the term ``legacy_crud`` :-)).
     #:
-    #: This is disabled by default.
+    #: This property can accept either a boolean value, which in turn enables/
+    #: disables the legacy mode for all the CRUD views or it can accept
+    #: a dict of CRUD operation codes and its corresponding legacy mode
+    #: specified as boolean value.
+    #:
+    #: This dict looks like::
+    #:
+    #:      legacy_crud = {
+    #:          'create': False,
+    #:          'detail': False,
+    #:          'update': False,
+    #:          'delete': False
+    #:      }
+    #:
+    #: So by setting ``legacy_crud[detail] = True``, you can enable legacy style
+    #: crud for the detail view whereas the rest of the CRUD operations are
+    #: performed from a modal popup.
+    #:
+    #: In other words, ``legacy_crud`` boolean value results in a dict that
+    #: consists of ``True`` or ``False`` values for all its keys, as the case
+    #: may be.
+    #:
+    #: This defaults to ``False``, which translates into a dict consisting of
+    #: ``False`` values for all its keys.
     legacy_crud = False
 
     #: Same as ``django.contrib.auth.mixins.AccessMixin`` ``login_url``, but
@@ -686,6 +705,13 @@ class PopupCrudViewSet(object):
     #: Same as ``django.contrib.auth.mixins.AccessMixin`` ``raise_exception``,
     #: but applicable for all CRUD views.
     raise_exception = False
+
+    popup_views = {
+        'create': True,
+        'detail': True,
+        'update': True,
+        'delete': True,
+    }
 
     @classonlymethod
     def _generate_view(cls, crud_view_class, **initkwargs):
@@ -925,3 +951,27 @@ class PopupCrudViewSet(object):
             urls.insert(0, url(r'create/$', cls.create(), name='create'))
 
         return include(urls, namespace=namespace)
+
+    @property
+    def popups(self):
+        """
+        Provides a normalized dict of crud view types to use for the viewset
+        depending on client.legacy_crud setting.
+
+        Computes this dict only one per object as an optimization.
+        """
+        if not hasattr(self, '_popups'):
+            popups_enabled = {
+                'detail': True, 'create': True, 'update': True, 'delete': True
+            }
+            if isinstance(self.legacy_crud, dict):
+                _popups = popups_enabled
+                _popups.update(self.legacy_crud)
+            else:
+                popups_disabled = popups_enabled.copy()
+                for k, v in popups_disabled.items():
+                    popups_disabled[k] = False
+                _popups = popups_disabled if self.legacy_crud else popups_enabled
+            self._popups = _popups
+
+        return self._popups

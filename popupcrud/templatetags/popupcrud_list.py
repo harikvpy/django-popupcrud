@@ -185,8 +185,12 @@ def list_field_value(view, obj, field, context, index):
         if detail_url:
             title = ugettext("{0} Detail").format(
                 view._viewset.model._meta.verbose_name)
-            value = six.text_type('<a name="object_detail" data-url="{0}" data-title="{2}" href="javascript:void(0);">{1}</a>').format(
-                detail_url, value, title)
+            if view._viewset.popups['detail']:
+                value = six.text_type('<a name="object_detail" data-url="{0}" data-title="{2}" href="javascript:void(0);">{1}</a>').format(
+                    detail_url, value, title)
+            else:
+                value = six.text_type('<a href="{0}" title="{2}">{1}</a>').format(
+                    detail_url, value, title)
 
         return mark_safe(six.text_type("{0}<div data-name='{1}'></div>").format(
                 value, view._viewset.get_obj_name(obj)))
@@ -195,8 +199,8 @@ def list_field_value(view, obj, field, context, index):
 
 
 def render_item_actions(context, obj):
-    edit_template = six.text_type('<a name="create_edit_object" data-url="{0}" data-title="{1}" href="javascript:void(0);"><span class="glyphicon glyphicon-pencil" title="{1}"></span></a>')
-    delete_template = six.text_type('<a name="delete_object" data-url="{0}" data-title="{1}" href="javascript:void(0);"><span class="glyphicon glyphicon-trash" title="{1}"></span></a>')
+    popup_edit_template = six.text_type('<a name="create_edit_object" data-url="{0}" data-title="{1}" href="javascript:void(0);"><span class="glyphicon glyphicon-pencil" title="{1}"></span></a>')
+    popup_delete_template = six.text_type('<a name="delete_object" data-url="{0}" data-title="{1}" href="javascript:void(0);"><span class="glyphicon glyphicon-trash" title="{1}"></span></a>')
 
     legacy_edit_template = six.text_type('<a href="{0}"><span class="glyphicon glyphicon-pencil" title="{1}"></span></a>')
     legacy_delete_template = six.text_type('<a href="{0}"><span class="glyphicon glyphicon-trash" title="{1}"></span></a>')
@@ -209,12 +213,14 @@ def render_item_actions(context, obj):
     delete_title = ugettext("Delete {0}").format(
         view._viewset.model._meta.verbose_name)
 
-    if view._viewset.legacy_crud:
-        edit_action = legacy_edit_template.format(edit_url, edit_title) if edit_url else ''
-        delete_action = legacy_delete_template.format(delete_url, delete_title) if delete_url else ''
-    else:
-        edit_action = edit_template.format(edit_url, edit_title) if edit_url else ''
-        delete_action = delete_template.format(delete_url, delete_title) if delete_url else ''
+    # choose the right template based on legacy_crud setting
+    edit_template = popup_edit_template if view._viewset.popups['update'] \
+            else legacy_edit_template
+    delete_template = popup_delete_template if view._viewset.popups['delete'] \
+            else legacy_delete_template
+
+    edit_action = edit_template.format(edit_url, edit_title) if edit_url else ''
+    delete_action = delete_template.format(delete_url, delete_title) if delete_url else ''
     return mark_safe("%s %s" % (edit_action, delete_action))
 
 
