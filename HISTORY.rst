@@ -38,3 +38,20 @@ History
 ++++++++++++++++++
 
 * Object detail view support 
+
+0.1.8 (2017-10-16)
+++++++++++++++++++
+
+* Add PopupCrudViewSet.urls() -- a single method to return all the CRUD urls 
+  that can be added to urlpatterns[].
+* When related object popup is activated on a multiselect select and it adds a 
+  new object, the object is added to the existing list of selections. (old code
+  used to replace all the current selections with the newly added item)
+* Insert all form media into ListView through ListView.media property. 
+* Fix broken support for django-select2 in modals by setting control's 
+  dropdownParent to the modal (rather than parent window)
+* Use the 'create-edit-modal' modal as the template for secondary modals
+  activated through related-model modal popups. This ensures consistent modal 
+  look and feel if the user customized the modal template by overriding 
+  popupcrud/modal.html template.
+* Fix ALLOWED_HOSTS in settings - issue #1
