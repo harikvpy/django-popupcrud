@@ -2,6 +2,10 @@
  * Bind a submit function to a form embedded in a Bootstrap modal, which in 
  * turn uses AJAX POST request to submit the form data. When the form has been
  * successully submitted, the modal is hidden. If the submitted form has errors
+{% bsmodal '??' 'add-related-modal' close_title_button=Yes %}
+    {# modal body will be filled in by jQuery.load(<new_object_url>) return value #}
+    ??
+{% endbsmodal %}
  * the form is re-rendered with field errors highlighted as per Bootstrap
  * rendering guidelines.
  *
@@ -98,7 +102,7 @@ $(document).ready(function() {
   var bindAddAnother = function(elem) {
     // Modal dialog template derived from #create-edit-modal that'll be added at 
     // the end of the <body> tag.
-    var modalTemplate = $('<div/>').html($("#create-edit-modal")[0].outerHTML);
+    var modalTemplate = $('<div/>').html($("#add-related-modal")[0].outerHTML);
     $(modalTemplate)
       .find('.modal').attr('id', 'create-related-modal')
       .find('.modal-title').html('')

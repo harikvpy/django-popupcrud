@@ -20,3 +20,17 @@ class Author(models.Model):
     def double_age(self):
         return self.age*2
     double_age.short_description = "Double Age"
+
+
+@python_2_unicode_compatible
+class Book(models.Model):
+    title = models.CharField("Title", max_length=128)
+    author = models.ForeignKey(Author)
+
+    class Meta:
+        ordering = ('title',)
+        verbose_name = "Book"
+        verbose_name_plural = "Books"
+
+    def __str__(self):
+        return self.title

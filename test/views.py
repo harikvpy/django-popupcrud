@@ -1,7 +1,14 @@
 from django.core.urlresolvers import reverse_lazy, reverse
 from django import forms
 
-from .models import Author
+try:
+    from django_select2.forms import Select2Widget
+    _select2 = True
+except ImportError:
+    _select2 = False
+
+from .models import Author, Book
+from popupcrud.widgets import RelatedFieldPopupFormWidget
 from popupcrud.views import PopupCrudViewSet
 
 # Create your views here.
@@ -45,5 +52,40 @@ class AuthorCrudViewset(PopupCrudViewSet):
             return None
         return reverse("delete-author", kwargs={'pk': obj.pk})
 
-    def get_obj_name(self, obj):
-        return "%s - %d" % (obj.name, obj.age)
+
+class BookForm(forms.ModelForm):
+    class Meta:
+        model = Book
+        fields = ('title', 'author')
+
+    def __init__(self, *args, **kwargs):
+        super(BookForm, self).__init__(*args, **kwargs)
+        author = self.fields['author']
+        author.widget = RelatedFieldPopupFormWidget(
+            widget=Select2Widget(choices=author.choices) if _select2 else \
+                    forms.Select(choices=author.choices),
+            new_url=reverse_lazy("new-author"))
+
+
+class BookCrudViewset(PopupCrudViewSet):
+    model = Book
+    form_class = BookForm
+    list_display = ('title', 'author')
+    list_url = reverse_lazy("books:list")
+    new_url = reverse_lazy("books:create")
+    related_object_popups = {
+        'author': reverse_lazy("new-author")
+    }
+    legacy_crud = True
+
+    @staticmethod
+    def get_edit_url(obj):
+        return reverse_lazy("books:update", kwargs={'pk': obj.pk})
+
+    @staticmethod
+    def get_delete_url(obj):
+        return reverse_lazy("books:delete", kwargs={'pk': obj.pk})
+
+    @staticmethod
+    def get_detail_url(obj):
+        return reverse_lazy("books:detail", kwargs={'pk': obj.pk})

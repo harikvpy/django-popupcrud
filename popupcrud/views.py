@@ -200,9 +200,11 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
 
     @property
     def media(self):
+        popups = self._viewset.popups
+        # don't load popupcrud.js if all crud views are set to 'legacy'
         popupcrud_media = forms.Media(
             css={'all': ('popupcrud/css/popupcrud.css',)},
-            js=('popupcrud/js/popupcrud.js',))
+            js=('popupcrud/js/popupcrud.js',) if any(popups.values()) else ())
 
         # Can't we load media of forms created using modelform_factory()?
         # Need to investigate.
@@ -514,7 +516,7 @@ class DeleteView(AttributeThunk, PermissionRequiredMixin, generic.DeleteView):
                 'result': False,
                 'message': temp.render({}, self.request)
             })
-        super(AjaxObjectFormMixin, self).handle_no_permission()
+        super(DeleteView, self).handle_no_permission()
 
     def delete(self, request, *args, **kwargs):
         """ Override to return JSON success response for AJAX requests """
@@ -966,7 +968,8 @@ class PopupCrudViewSet(object):
             }
             if isinstance(self.legacy_crud, dict):
                 _popups = popups_enabled
-                _popups.update(self.legacy_crud)
+                for k, v in self.legacy_crud.items():
+                    _popups[k] = False if v else True
             else:
                 popups_disabled = popups_enabled.copy()
                 for k, v in popups_disabled.items():

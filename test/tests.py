@@ -7,10 +7,17 @@ from django.core.urlresolvers import reverse
 from django.http import JsonResponse
 from django.utils import six
 
-from .models import Author
-from .views import AuthorCrudViewset
+from .models import Author, Book
+from .views import AuthorCrudViewset, BookCrudViewset
 
 RE_CREATE_EDIT_FORM = r"\n<form class='form-horizontal' id='create-edit-form' action='{0}' method='post' accept-charset='utf-8'>.*</form>\n"
+
+MODAL_PATTERNS = [
+    r'<div class="modal fade".*id="create-edit-modal"',
+    r'<div class="modal fade".*id="delete-modal"',
+    r'<div class="modal fade".*id="delete-result-modal"',
+    r'<div class="modal fade".*id="add-related-modal"',
+]
 
 class PopupCrudViewSetTests(TestCase):
 
@@ -23,12 +30,7 @@ class PopupCrudViewSetTests(TestCase):
         response = self.client.get(reverse("authors"))
         self.assertTemplateUsed(response, "popupcrud/list.html")
         # template should have the three embedded bootstrap modals
-        modal_patterns = [
-            r'<div class="modal fade".*id="create-edit-modal"',
-            r'<div class="modal fade".*id="delete-modal"',
-            r'<div class="modal fade".*id="delete-result-modal"',
-        ]
-        for pattern in modal_patterns:
+        for pattern in MODAL_PATTERNS:
             self.assertTrue(
                 re.search(pattern, response.content.decode('utf-8')))
 
@@ -48,7 +50,7 @@ class PopupCrudViewSetTests(TestCase):
         self.assertFalse(
             re.search(r'<th.*sortable.*>.*DOUBLE AGE.*</th>', html, re.DOTALL))
         # also tests the get_obj_name() method
-        first_col = """<a name="object_detail" data-url="{0}" data-title="Author Detail" href="javascript:void(0);">{1}</a><div data-name=\'{1} - 26\'></div>"""
+        first_col = """<a name="object_detail" data-url="{0}" data-title="Author Detail" href="javascript:void(0);">{1}</a><div data-name=\'{1}\'></div>"""
         self.assertContains(
             response,
             first_col.format(
@@ -67,7 +69,7 @@ class PopupCrudViewSetTests(TestCase):
         name = "何瑞理"
         author = Author.objects.create(name=name, age=46)
         response = self.client.get(reverse("authors"))
-        first_col = """<a name="object_detail" data-url="{0}" data-title="Author Detail" href="javascript:void(0);">{1}</a><div data-name=\'{1} - 46\'></div>"""
+        first_col = """<a name="object_detail" data-url="{0}" data-title="Author Detail" href="javascript:void(0);">{1}</a><div data-name=\'{1}\'></div>"""
         self.assertContains(
             response,
             first_col.format(
@@ -152,5 +154,108 @@ class PopupCrudViewSetTests(TestCase):
         john = Author.objects.create(name="John", age=25)
         url = reverse("author-detail", kwargs={'pk': john.pk})
         response = self.client.get(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        self.assertTemplateUsed(response, "popupcrud/detail.html")
+        self.assertTemplateUsed(response, "popupcrud/detail_inner.html")
         self.assertContains(response, "John")
+
+    def test_legacy_crud_boolean(self):
+        prev_value = AuthorCrudViewset.legacy_crud
+        AuthorCrudViewset.legacy_crud = True
+        response = self.client.get(reverse("authors"))
+        for pattern in MODAL_PATTERNS:
+            self.assertIsNone(
+                re.search(pattern, response.content.decode('utf-8')))
+        AuthorCrudViewset.legacy_crud = prev_value
+
+    def test_legacy_crud_dict_create(self):
+        prev_value = AuthorCrudViewset.legacy_crud
+        AuthorCrudViewset.legacy_crud = {
+            'create': True
+        }
+        response = self.client.get(reverse("authors"))
+        # New Author button's href should be AuthorCrudViewset.new_url's value,
+        # and not 'javascript:void(0)'
+        NEW_BUTTON_RE = r'<a.*class="btn btn-primary".*href="%s.*">' % \
+                str(AuthorCrudViewset.new_url)
+        self.assertTrue(re.search(NEW_BUTTON_RE,
+                        response.content.decode('utf-8'), re.DOTALL))
+        AuthorCrudViewset.legacy_crud = prev_value
+
+    def test_legacy_crud_dict_create_n_update(self):
+        john = Author.objects.create(name="John", age=25)
+        prev_value = AuthorCrudViewset.legacy_crud
+        AuthorCrudViewset.legacy_crud = {
+            'create': True,
+            'update': True
+        }
+        response = self.client.get(reverse("authors"))
+        # create_edit_modal modal dialog should not exist
+        self.assertIsNone(
+            re.search(MODAL_PATTERNS[0], response.content.decode('utf-8')))
+        self.assertIsNone(
+            re.search(MODAL_PATTERNS[3], response.content.decode('utf-8')))
+        AuthorCrudViewset.legacy_crud = prev_value
+
+    def test_legacy_crud_dict_detail(self):
+        name = "John"
+        john = Author.objects.create(name=name, age=25)
+        prev_value = AuthorCrudViewset.legacy_crud
+        AuthorCrudViewset.legacy_crud = {
+            'detail': True,
+        }
+        response = self.client.get(reverse("authors"))
+        # All the modal dialog's should be present, but Detail view should
+        # point to the detail url and not javascript:void(0)
+        for pattern in MODAL_PATTERNS:
+            self.assertIsNotNone(
+                re.search(pattern, response.content.decode('utf-8')))
+
+        # note href != "javascript:void(0)"
+        ITEM_DETAIL_RE = r'<a href="{0}".*>{1}</a>'.format(
+            reverse("author-detail", kwargs={'pk': john.pk}),
+            name)
+        self.assertIsNotNone(
+            re.search(ITEM_DETAIL_RE, response.content.decode('utf-8')))
+        AuthorCrudViewset.legacy_crud = prev_value
+
+    def test_legacy_create_contains_add_related_modal(self):
+        prev_value = AuthorCrudViewset.legacy_crud
+        AuthorCrudViewset.legacy_crud = {
+            'create': True
+        }
+        response = self.client.get(reverse("new-author"))
+        # modal id=add_related_modal pattern should exist in response
+        self.assertIsNotNone(
+            re.search(MODAL_PATTERNS[3], response.content.decode('utf-8')))
+
+    def test_viewset_urls(self):
+        # default arguments generates all views
+        urls = BookCrudViewset.urls()
+        for pattern in urls[0]:
+            self.assertTrue(pattern.name in ('list', 'create', 'detail', 'update', 'delete'))
+
+        # namespace defaults to model's verbose_name_plural
+        self.assertEqual(urls[2], 'books')
+
+        urls = BookCrudViewset.urls(views=('create', 'detail'))
+        for pattern in urls[0]:
+            self.assertTrue(pattern.name in ('list', 'create', 'detail'))
+
+        urls = BookCrudViewset.urls(views=('update', 'delete'))
+        for pattern in urls[0]:
+            self.assertTrue(pattern.name in ('list', 'update', 'delete'))
+
+        # test namespace argument
+        urls = BookCrudViewset.urls(namespace='titles')
+        self.assertEqual(urls[2], 'titles')
+
+    def test_viewset_urls(self):
+        # Integration test for urls(). Verify that the generated CRUD urls are
+        # registered in URLconf correctly.
+        name = "John"
+        john = Author.objects.create(name=name, age=25)
+        book = Book.objects.create(title='Title', author=john)
+        self.assertIsNotNone(reverse("books:list"))
+        self.assertIsNotNone(reverse("books:create"))
+        self.assertIsNotNone(reverse("books:detail", kwargs={'pk': book.pk}))
+        self.assertIsNotNone(reverse("books:update", kwargs={'pk': book.pk}))
+        self.assertIsNotNone(reverse("books:delete", kwargs={'pk': book.pk}))

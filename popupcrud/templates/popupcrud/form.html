@@ -1,4 +1,12 @@
 {% extends base_template %}
+{% load bsmodal %}
+{% block extrahead %}
+{{ form.media }}
+{% endblock extrahead %}
 {% block content %}
 {% include "popupcrud/form_inner.html" %}
+{% bsmodal '??' 'add-related-modal' close_title_button=Yes %}
+    {# modal body will be filled in by jQuery.load(<new_object_url>) return value #}
+    ??
+{% endbsmodal %}
 {% endblock content %}

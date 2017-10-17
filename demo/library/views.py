@@ -82,7 +82,7 @@ class BookCrudViewset(PopupCrudViewSet):
         'author': reverse_lazy("library:new-author")
     }
     legacy_crud = {
-        'create': False
+        'create': True,
     }
 
     @staticmethod
