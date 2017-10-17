@@ -165,3 +165,47 @@ Note how ``Select2Widget`` is essentially a drop in replacement for the native
 <http://django-select2.readthedocs.io/en/latest/get_started.html>`_
 for instructions on integrating it with your project.
 
+Providing your own templates
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Out of the box, ``popupcrud`` comes with its own templates for rendering all
+the CRUD views. For most use cases this ought to suffice. For the detail
+view, the default template just renders the object name in the popup. Typically,
+you might want to include additional information about an object in its detail
+view. To do this, implement ``<model>_detail.html`` in your app's template folder
+and this template will be used to display details about an object.
+
+One point to highlight about templates is that since popupcrud can work in
+both legacy(like Django admin) and the more modern Web 2.0
+modal dialog based modes, it needs two templates to render the content for the
+two modes. This is necessary as contents of a modal popup window should only
+contain details of the object without site-wide common elements such as headers
+and menu that is usually provided through a base template whereas the dedicated
+legacy crud page requires all the site-wide common artifacts. This problem
+exists for all CRUD views - create, update, delete and detail. Therefore, for 
+consistency across different CRUD views, popupcurd uses a standard file naming 
+convention to determine the template name to use for the given CRUD view mode.
+
+This convention gives first priority to Django generic CRUD views' default 
+template file name. If it's present it will be used for the CRUD view. However,
+if the view is to be rendered in a modal popup window, which should not have 
+site-wide common artifacts, popupcrud appends ``_inner`` to the base template 
+filename (the part before ``.html``). So if you want to display
+details of a object of class ``Book`` in a modal popup, you have to implement
+the template file ``book_detail_inner.html``. However, if you disable popups
+for the ``detail`` view, you have to implement ``book_detail.html``. The 
+difference between the two being that ``*_inner.html`` only renders the object's
+details whereas ``book_detail.html`` renders the object's details along with
+site-wide page common artifacts such as header, footers and/or sidebars.
+
+One strategy is to provide both templates and organize them using the 
+``{% include %}`` tag. With this pattern, ``book_detail.html`` would 
+look like this::
+
+    {% extends "base.html" %}
+    {% block content %}
+    {% include "book_detail_inner.html" %}
+    {% endblock content %}
+
+The same pattern is applicable to other CRUD views as well where template files
+such as ``book_form.html``, ``confirm_book_delete.html`` are looked for first
+before using popupcrud's own internal templates.

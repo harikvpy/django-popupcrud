@@ -104,16 +104,6 @@ Quickstart
    The urls are registered under its own namespace, which defaults to the 
    model's ``verbose_name_plural`` meta value.
 
-   You may also register them individually by using the individual CRUD view
-   generation method as this::
-
-        urlpatterns= [
-            url(r'^authors$', views.AuthorCrudViewset.list(), name='authors'),
-            url(r'^authors/new/$', views.AuthorCrudViewset.create(), name='new-author'),
-            url(r'^authors(?P<pk>\d+)/edit/$', views.AuthorCrudViewset.update(), name='edit-author'),
-            url(r'^authors(?P<pk>\d+)/delete/$', views.AuthorCrudViewset.delete(), name='delete-author'),
-            ]
-
 6. Thats it! Your modern HTML popup based CRUD for your table is up and running.
 
    PopupCrudViewSet has many options to customize the fields displayed in list
