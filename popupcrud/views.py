@@ -17,6 +17,7 @@ from django.contrib import messages
 from django.utils.decorators import classonlymethod
 from django.utils.translation import ugettext_lazy as _, ugettext
 from django.utils.http import urlencode
+from django.utils import six
 
 #from django.contrib.admin import ModelAdmin
 
@@ -848,7 +849,7 @@ class PopupCrudViewSet(object):
         For example, you might want to display the balance due from a customer
         when confirming user action to delete the customer record.
         """
-        return str(obj)
+        return six.text_type(obj)
 
     def get_permission_required(self, op):
         """
