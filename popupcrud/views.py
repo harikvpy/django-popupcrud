@@ -205,7 +205,7 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
         # don't load popupcrud.js if all crud views are set to 'legacy'
         popupcrud_media = forms.Media(
             css={'all': ('popupcrud/css/popupcrud.css',)},
-            js=('popupcrud/js/popupcrud.js',) if any(popups.values()) else ())
+            js=('popupcrud/js/popupcrud.js',))
 
         # Can't we load media of forms created using modelform_factory()?
         # Need to investigate.

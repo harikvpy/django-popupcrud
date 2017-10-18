@@ -1,11 +1,22 @@
 /* 
+ * Event raised after a create/update form is displayed and ready for further
+ * manipulation by client code. This event can be trapped by client code to
+ * add their own custom JavaScript initialization to the form. Using this event
+ * instead of the ubiqitous $(document).ready ensures that the same init code
+ * works well on both legacy and popup modes.
+ *
+ * This allows you write code such as this:
+ *
+ *   $(document).on("crudform.ready", function(event) {
+ *     // create/edit form initialization code goes here
+ *   });
+ */
+const CRUDFORM_READY = "crudform.ready";
+
+/* 
  * Bind a submit function to a form embedded in a Bootstrap modal, which in 
  * turn uses AJAX POST request to submit the form data. When the form has been
  * successully submitted, the modal is hidden. If the submitted form has errors
-{% bsmodal '??' 'add-related-modal' close_title_button=Yes %}
-    {# modal body will be filled in by jQuery.load(<new_object_url>) return value #}
-    ??
-{% endbsmodal %}
  * the form is re-rendered with field errors highlighted as per Bootstrap
  * rendering guidelines.
  *
@@ -90,15 +101,17 @@ $(document).ready(function() {
       }
     );
   });
-  // Binds all '.add-another' hyperlinks under the given 'elem' with their own
-  // modals, each of which will hold the form for the .add-another's data-url
-  // value. Each such modal is given an id composed as the value of the 'a' 
-  // tag's 'id' value + '-modal'. The modal will be added only if a modal with
-  // the same id does not exist so as to avoid duplicate modals.
-  //
-  // The 'a' tag is assigned the newly added modal's id, so that the associated
-  // modal dialog can be loaded with the respective url form content and 
-  // activated in a generic manner from a Javascript function.
+  /*
+   * Binds all '.add-another' hyperlinks under the given 'elem' with their own
+   * modals, each of which will hold the form for the .add-another's data-url
+   * value. Each such modal is given an id composed as the value of the 'a' 
+   * tag's 'id' value + '-modal'. The modal will be added only if a modal with
+   * the same id does not exist so as to avoid duplicate modals.
+  
+   * The 'a' tag is assigned the newly added modal's id, so that the associated
+   * modal dialog can be loaded with the respective url form content and 
+   * activated in a generic manner from a Javascript function.
+   */
   var bindAddAnother = function(elem) {
     // Modal dialog template derived from #create-edit-modal that'll be added at 
     // the end of the <body> tag.
@@ -115,18 +128,20 @@ $(document).ready(function() {
       }
       $(elem).data('modal', modalId);
     });
-    // Generic function that loads the form associated with a hyperlink into
-    // the related modal.
-    //
-    // Constraints & Behavior:
-    //  1. <a> element is preceded immediately by a <select> element
-    //  2. <a> element has the following data attributes:
-    //      a. data-url: the URL to load the form from
-    //      b. data-modal: id of the associated modal that is loaded with the 
-    //         form and activated.
-    //  3. The activated modal's title is set to <a> element's text content.
-    //  4. If the activated form submission was successful, the sibling 'select'
-    //     element is popuplated with an <option> for the just added element.
+    /*
+     * Generic function that loads the form associated with a hyperlink into
+     * the related modal.
+     *
+     * Constraints & Behavior:
+     *  1. <a> element is preceded immediately by a <select> element
+     *  2. <a> element has the following data attributes:
+     *      a. data-url: the URL to load the form from
+     *      b. data-modal: id of the associated modal that is loaded with the 
+     *         form and activated.
+     *  3. The activated modal's title is set to <a> element's text content.
+     *  4. If the activated form submission was successful, the sibling 'select'
+     *     element is popuplated with an <option> for the just added element.
+     */
     $(elem).find(".add-another").click(function(evtObj) {
       var url = $(this).data('url');
       var title = $(this).text();
@@ -155,13 +170,14 @@ $(document).ready(function() {
   // Bind any embedded .add-another links in the document to its own modal. 
   bindAddAnother($('body')); 
 
-  /* Adjusts the just activated modal window's z-index to a value higher 
-     than the previously activated modal window's z-index. This will 
-     ensure that each newly activated modal is layered on top of all 
-     previously activated modals achieving the layered dialog effect.
+  /* 
+   * Adjusts the just activated modal window's z-index to a value higher 
+   * than the previously activated modal window's z-index. This will 
+   * ensure that each newly activated modal is layered on top of all 
+   * previously activated modals achieving the layered dialog effect.
 
-     Code borrowed from: http://jsfiddle.net/CxdUQ/
-     */
+   * Code borrowed from: http://jsfiddle.net/CxdUQ/
+   */
   $(document).on('show.bs.modal', '.modal', function (event) {
     // calculate z-index as a function of number of visible modal windows.
     var zIndex = 1040 + (10 * $('.modal:visible').length);
@@ -186,5 +202,30 @@ $(document).ready(function() {
         dropdownParent: $(this)
       });
     }
+
+    // trigger the crudform.ready event
+    triggerCrudFormReady(this);
   });
+
+  function triggerCrudFormReady(elem) {
+    // Triggers crudform.ready event on an activated form if it's
+    // not the delete-form
+    var form = $(elem).find("form");
+    if (form) {
+      var ev = $.Event(CRUDFORM_READY);
+      if (form.attr('id') != 'delete-form') { // exclude delete-form
+        form.trigger(ev);
+      }
+    }
+  }
+
+  /*
+   * Trigger CRUDFORM_READY event, if we're in legacy_crud mode. Since
+   * '<form>' element would only be present in legacy_crud mode, this code
+   * is safe in that it will not have any effect on popup crud mode.
+   * Delete item form is preloaded with list template, but we dont trigger
+   * the event for this form (checked by triggerCrudFormReady).
+   */
+  triggerCrudFormReady(document);
 });
+
