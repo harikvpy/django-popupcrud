@@ -55,3 +55,13 @@ History
   look and feel if the user customized the modal template by overriding 
   popupcrud/modal.html template.
 * Fix ALLOWED_HOSTS in settings - issue #1
+
+0.2.0 (2017-10-18)
+++++++++++++++++++
+* Bumping minor version as reflection of new features legacy_crud dict, media 
+  & out-of-the-box django_select2 support in previous release
+* Added 'crudform.ready' JavaScript event, which is triggered when 
+  create/update form is activated. This event provides clients an uniform way to 
+  apply their own optional initialization code to the CRUD forms.
+* Added 6 more tests to cover new legacy_crud dict value support & form media
+  injection.
