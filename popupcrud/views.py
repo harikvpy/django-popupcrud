@@ -15,7 +15,7 @@ from django.template import loader
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib import messages
 from django.utils.decorators import classonlymethod
-from django.utils.translation import ugettext_lazy as _, ugettext
+from django.utils.translation import ugettext_lazy as _, ugettext, override
 from django.utils.http import urlencode
 from django.utils import six
 
@@ -572,6 +572,7 @@ class PopupCrudViewSet(object):
             url(r'mymodel/(?P<pk>\d+)/delete/$', MyModelViewset.delete(), name='delete-mymodel'),
             ]
     """
+    _urls = None    # urls cache, so that we don't build it for every request
 
     #: The model to build CRUD views for. This is a required attribute.
     model = None
@@ -935,25 +936,30 @@ class PopupCrudViewSet(object):
                 reverse("library:books:delete", kwargs={'pk': book.pk})
 
         """
-        if not namespace:
-            namespace = cls.model._meta.verbose_name_plural.lower()
+        if not cls._urls:
+            if not namespace:
+                with override('en'): # force URLs to be in English even when
+                                     # default language is set to something else
+                    namespace = cls.model._meta.verbose_name_plural.lower()
 
-        # start with only list url, the rest are optional based on views arg
-        urls = [url(r'$', cls.list(), name='list')]
+            # start with only list url, the rest are optional based on views arg
+            urls = [url(r'$', cls.list(), name='list')]
 
-        if 'detail' in views:
-            urls.insert(0, url(r'(?P<pk>\d+)/$', cls.detail(), name='detail'))
+            if 'detail' in views:
+                urls.insert(0, url(r'^(?P<pk>\d+)/$', cls.detail(), name='detail'))
 
-        if 'delete' in views:
-            urls.insert(0, url(r'(?P<pk>\d+)/delete/$', cls.delete(), name='delete'))
+            if 'delete' in views:
+                urls.insert(0, url(r'^(?P<pk>\d+)/delete/$', cls.delete(), name='delete'))
 
-        if 'update' in views:
-            urls.insert(0, url(r'(?P<pk>\d+)/update/$', cls.update(), name='update'))
+            if 'update' in views:
+                urls.insert(0, url(r'^(?P<pk>\d+)/update/$', cls.update(), name='update'))
 
-        if 'create' in views:
-            urls.insert(0, url(r'create/$', cls.create(), name='create'))
+            if 'create' in views:
+                urls.insert(0, url(r'^create/$', cls.create(), name='create'))
 
-        return include(urls, namespace=namespace)
+            cls._urls = include(urls, namespace)
+
+        return cls._urls
 
     @property
     def popups(self):
