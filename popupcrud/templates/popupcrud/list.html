@@ -4,6 +4,7 @@
 {{ view.media }}
 {% endblock extrahead %}
 {% block content %}
+{% block popupcrud_list %}
 {% block create_new %}
 {% if new_url %}
 <div>
@@ -59,4 +60,5 @@
     </div>
 {% endbsmodal %}
 {% endif %} {# if viewset.popups.delete %} #}
+{% endblock popupcrud_list %}
 {% endblock content %}
