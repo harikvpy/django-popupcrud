@@ -901,8 +901,8 @@ class PopupCrudViewSet(object):
         Returns the CRUD urls for the viewset that can be added to the URLconf.
         The URLs returned can be controlled by the ``views`` parameter which
         is tuple of strings specifying the CRUD operations URLs to be returned.
-        This defaults to all the CRUD operations: list, create, read(detail),
-        update & delete.
+        This defaults to all the CRUD operations: create, read(detail),
+        update & delete (List view URL is added by default).
 
         This method can be seen as a wrapper to calling the individual view
         generator methods, ``list()``, ``detail()``, ``create()``, ``update()``
@@ -910,7 +910,7 @@ class PopupCrudViewSet(object):
 
         :param namespace: The namespace under which the CRUD urls are registered.
             Defaults to the value of ``<model>.Meta.verbose_name_plural`` (in
-            lowercase).
+            lowercase and in English).
         :param views: A tuple of strings representing the CRUD views whose URL
             patterns are to be registered. Defaults to ``('create', 'update',
             'delete', 'detail')``, that is all the CRUD operations for the model.
