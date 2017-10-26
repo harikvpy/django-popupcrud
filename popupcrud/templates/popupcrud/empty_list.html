@@ -1,0 +1,23 @@
+<div class="push-50-t push-50">
+   <div class="text-center">
+        {% if icon %}
+        <div class='push-30'>
+            <i class="{{ icon }} fa-5x"></i>
+        </div>
+        {% endif %}
+        <div>
+            <p>
+            {{ message }}
+            </p>
+            {% if viewset.new_url %}
+            <p>
+            {% if not viewset.popups.create %}
+                <a class="btn btn-primary" href="{{ viewset.new_url }}" type="link">{{ new_button_text }}</a>
+            {% else %}
+                <a class="btn btn-primary" href="javascript:void(0);" name="create_edit_object" type="link" data-url="{{ viewset.new_url }}" data-title="{{ new_button_text }}">{{ new_button_text }}</a>
+            {% endif %}
+            </p>
+            {% endif %}
+        </div>
+   </div>
+</div>

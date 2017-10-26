@@ -8,10 +8,12 @@
 {% block create_new %}
 {% if new_url %}
 <div>
+{% if object_list %}
 {% if not viewset.popups.create %}
     <a class="btn btn-primary" href="{{ new_url }}" type="link">{{ new_button_text }}</a>
 {% else %}
     <a class="btn btn-primary" href="javascript:void(0);" name="create_edit_object" type="link" data-url="{{ new_url }}" data-title="{{ new_button_text }}">{{ new_button_text }}</a>
+{% endif %}
 {% endif %}
 </div>
 {% endif %}
@@ -20,7 +22,7 @@
 {% list_content %}
 {% include "popupcrud/_pagination.html" %}
 {% else %}
-<p>{% block empty_table_label %}{% trans "No items." %}{% endblock empty_table_label %}</p>
+{% empty_list %}
 {% endif %}
 {% if viewset.popups.create or viewset.popups.update %}
 {% bsmodal '??' 'create-edit-modal' close_title_button=Yes header_bg_css=bg-primary %}

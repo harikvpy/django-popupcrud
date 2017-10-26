@@ -717,6 +717,17 @@ class PopupCrudViewSet(object):
         'delete': True,
     }
 
+    #: Icon to be displayed above the empty list state message. Defaults to
+    #: None, which displays no icon.
+    empty_list_icon = None
+
+    #: Message to be displayed when list view contains no records, that is,
+    #: empty list state. Defaults to 'No records found`.
+    #:
+    #: Empty list state rendering can be customized further by overriding
+    #: ``popupcrud/empty_list.html`` template in your own project.
+    empty_list_message = _('No records found.')
+
     @classonlymethod
     def _generate_view(cls, crud_view_class, **initkwargs):
         """
@@ -985,3 +996,19 @@ class PopupCrudViewSet(object):
             self._popups = _popups
 
         return self._popups
+
+    def get_empty_list_icon(self):
+        """
+        Determine the icon used to display empty list state.
+
+        Returns the value of ``empty_list_icon`` property by default.
+        """
+        return self.empty_list_icon
+
+    def get_empty_list_message(self):
+        """
+        Determine the message used to display empty table state.
+
+        Returns the value of ``empty_list_message`` property by default.
+        """
+        return self.empty_list_message

@@ -252,3 +252,15 @@ def list_content(context):
         'results': list_display_results(view, queryset, context),
         'num_sorted_fields': num_sorted_fields,
     }
+
+
+@register.inclusion_tag("popupcrud/empty_list.html", takes_context=True)
+def empty_list(context):
+    viewset = context['view']._viewset
+    return {
+        'viewset': viewset,
+        'icon': viewset.get_empty_list_icon(),
+        'message': viewset.get_empty_list_message(),
+        'new_button_text': ugettext("New {0}").format(
+            viewset.model._meta.verbose_name),
+    }
