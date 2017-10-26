@@ -65,3 +65,11 @@ History
   apply their own optional initialization code to the CRUD forms.
 * Added 6 more tests to cover new legacy_crud dict value support & form media
   injection.
+
+0.3.0 (2017-10-26)
+++++++++++++++++++
+* List view content is rendered in its own block, popupcrud_list, in the 
+  template file. This allows the list content to be relocated to different
+  parts of the base template.
+* Add ViewSet.empty_list_icon and ViewSet.empty_list_message properties. These
+  properties provide for prettier rendering of empty table states. 
