@@ -718,7 +718,14 @@ class PopupCrudViewSet(object):
     }
 
     #: Icon to be displayed above the empty list state message. Defaults to
-    #: None, which displays no icon.
+    #: None, which displays no icon. To specify an icon, set this property
+    #: to the CSS class of the required icon.
+    #:
+    #: For example to use the glyphicon-book icon, set this property to::
+    #:
+    #:  empty_list_icon = 'glyphicon glyphicon-book'
+    #:
+    #: Icons displayed are enlarged to 5 times the standard font size.
     empty_list_icon = None
 
     #: Message to be displayed when list view contains no records, that is,

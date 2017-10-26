@@ -81,7 +81,9 @@ table thead th.sorted .sortoptions a.descending:focus,
 table thead th.sorted .sortoptions a.descending:hover {
     background-position: 0 -70px;
 }    
-
 thead th.sorted .text {
     padding-right: 42px;
+}
+.empty-list-icon {
+    font-size: 5em;
 }
