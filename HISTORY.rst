@@ -73,3 +73,8 @@ History
   parts of the base template.
 * Add ViewSet.empty_list_icon and ViewSet.empty_list_message properties. These
   properties provide for prettier rendering of empty table states. 
+
+0.3.1 (2017-10-26)
+++++++++++++++++++
+* Use custom style for empty-list-state icon sizing. Earlier code was using font
+  awesome style.
