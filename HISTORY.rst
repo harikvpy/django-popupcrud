@@ -78,3 +78,12 @@ History
 ++++++++++++++++++
 * Use custom style for empty-list-state icon sizing. Earlier code was using font
   awesome style.
+
+0.4.0 (2017-11-2)
++++++++++++++++++
+* Breadcrumbs support
+* ListView queryset custom filtering through ``PopupCrudViewSet.get_queryset()``
+* Support custom form init args through ``PopupCrudViewSet.get_form_kwargs()``
+* ``PopupCrudViewSet.new_url`` and ``PopupCrudViewSet.list_url`` are determined
+  through ``PopupCrudViewSet.get_new_url()`` and 
+  ``PopupCrudViewSet.get_list_url``.
