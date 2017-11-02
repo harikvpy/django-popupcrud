@@ -88,7 +88,7 @@ class PopupCrudViewSetTests(TestCase):
         self.assertNotContains(response, "<table class='table")
         self.assertNotContains(response, "<th>Name</th>")
         self.assertNotContains(response, "<th>Age</th>")
-        self.assertContains(response, "No items")
+        self.assertContains(response, "No records found")
 
     def test_urls(self):
         for _ in range(0, 10):
