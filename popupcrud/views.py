@@ -148,13 +148,25 @@ class AttributeThunk(object):
         return self._viewset.fields
 
     def get_success_url(self):
-        return self._viewset.list_url
+        return self._viewset.get_list_url()
+
+    def get_form_kwargs(self):
+        kwargs = super(AttributeThunk, self).get_form_kwargs()
+        kwargs.update(self._viewset.get_form_kwargs())
+        return kwargs
 
     def get_context_data(self, **kwargs):
         kwargs['base_template'] = POPUPCRUD['base_template']
         title_cv = POPUPCRUD['page_title_context_variable']
-        kwargs[title_cv] = self._viewset.get_page_title()
+        kwargs[title_cv] = kwargs['pagetitle'] #self._viewset.get_page_title()
         kwargs['viewset'] = self._viewset
+        kwargs[self._viewset.breadcrumbs_context_variable] = \
+                self._viewset.get_breadcrumbs()
+        if not self.request.is_ajax() and not isinstance(self, ListView):
+            # for legacy crud views, add the listview url to the breadcrumb
+            kwargs[self._viewset.breadcrumbs_context_variable].append(
+                (self._viewset.model._meta.verbose_name_plural,
+                 self._viewset.get_list_url()))
         return super(AttributeThunk, self).get_context_data(**kwargs)
 
     @property
@@ -218,6 +230,7 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
 
     def get_queryset(self):
         qs = super(ListView, self).get_queryset()
+        qs = self._viewset.get_queryset(qs)
 
         # Apply any filters
 
@@ -243,6 +256,7 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
         return templates
 
     def get_context_data(self, **kwargs):
+        kwargs['pagetitle'] = self._viewset.get_page_title()
         context = super(ListView, self).get_context_data(**kwargs)
         context['model_options'] = self._viewset.model._meta
         context['new_button_text'] = ugettext("New {0}").format(
@@ -462,7 +476,8 @@ class CreateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
         super(CreateView, self).__init__(viewset_cls, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        kwargs['pagetitle'] = ugettext("New {0}").format(self._viewset.model._meta.verbose_name)
+        kwargs['pagetitle'] = _("New {0}").format(
+            self._viewset.model._meta.verbose_name)
         kwargs['form_url'] = self._viewset.get_new_url()
         return super(CreateView, self).get_context_data(**kwargs)
 
@@ -476,6 +491,13 @@ class DetailView(AttributeThunk, TemplateNameMixin, PermissionRequiredMixin,
     def __init__(self, viewset_cls, *args, **kwargs):
         super(DetailView, self).__init__(viewset_cls, *args, **kwargs)
 
+    def get_context_data(self, **kwargs):
+        kwargs['pagetitle'] = six.text_type(self.object)
+        # _("{0} - {1}").format(
+        #     self._viewset.model._meta.verbose_name,
+        #     six.text_type(self.object))
+        return super(DetailView, self).get_context_data(**kwargs)
+
 
 class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
                  PermissionRequiredMixin, generic.UpdateView):
@@ -487,7 +509,8 @@ class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
         super(UpdateView, self).__init__(viewset_cls, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        kwargs['pagetitle'] = _("Edit {0}").format(self._viewset.model._meta.verbose_name)
+        kwargs['pagetitle'] = _("Edit {0}").format(
+            self._viewset.model._meta.verbose_name)
         kwargs['form_url'] = self._viewset.get_edit_url(self.object)
         return super(UpdateView, self).get_context_data(**kwargs)
 
@@ -735,6 +758,20 @@ class PopupCrudViewSet(object):
     #: ``popupcrud/empty_list.html`` template in your own project.
     empty_list_message = _('No records found.')
 
+    #: List of breadcrumbs that will be added to ViewSet views' context,
+    #: allowing you build a breadcrumb hierarchy that reflects the ViewSet's
+    #: location in the site.
+    #:
+    #: Note that for ``legacy_crud`` views, system would add the ``list view``
+    #: url to the breadcrumbs list.
+    breadcrumbs = []
+
+    #: The template context variable name that will be initialized with the
+    #: value of ``breadcrumbs`` property. You can enumerate this variable in
+    #: your base template to build a breadcrumbs list that reflects the
+    #: hierarchy of the page.
+    breadcrumbs_context_variable = 'breadcrumbs'
+
     @classonlymethod
     def _generate_view(cls, crud_view_class, **initkwargs):
         """
@@ -807,6 +844,9 @@ class PopupCrudViewSet(object):
         to url() in urls.py.
         """
         return cls._generate_view(DeleteView, **initkwargs)
+
+    def get_list_url(self):
+        return self.list_url
 
     def get_new_url(self):
         """ Returns the URL to create a new model object. Returning None would
@@ -1019,3 +1059,35 @@ class PopupCrudViewSet(object):
         Returns the value of ``empty_list_message`` property by default.
         """
         return self.empty_list_message
+
+    def get_breadcrumbs(self):
+        """
+        Returns the value of ``ViewSet.breadcrumbs`` property. You can use this
+        method to return breadcrumbs that contain runtime computed values.
+        """
+        return self.breadcrumbs
+
+    def get_queryset(self, qs):
+        """
+        Called by ListView allowing ViewSet to do further filtering of the
+        queryset, if necessary. By default returns the queryset argument
+        unchanged.
+
+        :param qs: Queryset that is used for rendering ListView content.
+
+        :rtype: A valid Django queryset.
+        """
+        return qs
+
+    def get_form_kwargs(self):
+        """
+        For Create and Update views, this method allows passing custom arguments
+        to the form class constructor. The return value from this method is
+        combined with the default form constructor ``**kwargs`` before it is
+        passed to the form class' ``__init__()`` routine's ``**kwargs``.
+
+        Since Django CBVs use kwargs ``initial`` & ``instance``, be careful
+        when using these, unless of course, you want to override the objects
+        provided by these keys.
+        """
+        return {}

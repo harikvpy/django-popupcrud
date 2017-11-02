@@ -115,6 +115,9 @@ $(document).ready(function() {
   var bindAddAnother = function(elem) {
     // Modal dialog template derived from #create-edit-modal that'll be added at 
     // the end of the <body> tag.
+    if ($("#add-related-modal").length == 0)
+      return;
+
     var modalTemplate = $('<div/>').html($("#add-related-modal")[0].outerHTML);
     $(modalTemplate)
       .find('.modal').attr('id', 'create-related-modal')
