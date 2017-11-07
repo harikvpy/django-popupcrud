@@ -37,6 +37,8 @@ var submitModalForm = function(form, modal, complete) {
                 if ( $(xhr).find('.has-error').length > 0 ||
                      $(xhr).find('.alert').length > 0) {
                     $(modal).find('.block-content').html(xhr);
+                    bindAddAnother(modal);
+                    bindSelect2(modal);
                     submitModalForm(form, modal, complete);
                 } else {
                     $(modal).modal('hide');
@@ -51,6 +53,99 @@ var submitModalForm = function(form, modal, complete) {
         });
     });
 }
+var bindSelect2 = function(modal) {
+  var sels = $(modal).find('.django-select2');
+  if (sels.length > 0) {
+    $(sels).djangoSelect2({
+      dropdownParent: $(modal)
+    });
+  }
+
+  // trigger the crudform.ready event
+  triggerCrudFormReady(modal);
+}
+
+var triggerCrudFormReady = function(elem) {
+  // Triggers crudform.ready event on an activated form if it's
+  // not the delete-form
+  var form = $(elem).find("form");
+  if (form) {
+    var ev = $.Event(CRUDFORM_READY);
+    if (form.attr('id') != 'delete-form') { // exclude delete-form
+      form.trigger(ev);
+    }
+  }
+}
+/*
+ * Binds all '.add-another' hyperlinks under the given 'elem' with their own
+ * modals, each of which will hold the form for the .add-another's data-url
+ * value. Each such modal is given an id composed as the value of the 'a' 
+ * tag's 'id' value + '-modal'. The modal will be added only if a modal with
+ * the same id does not exist so as to avoid duplicate modals.
+
+ * The 'a' tag is assigned the newly added modal's id, so that the associated
+ * modal dialog can be loaded with the respective url form content and 
+ * activated in a generic manner from a Javascript function.
+ */
+var bindAddAnother = function(elem) {
+  // Modal dialog template derived from #create-edit-modal that'll be added at 
+  // the end of the <body> tag.
+  if ($("#add-related-modal").length == 0)
+    return;
+
+  var modalTemplate = $('<div/>').html($("#add-related-modal")[0].outerHTML);
+  $(modalTemplate)
+    .find('.modal').attr('id', 'create-related-modal')
+    .find('.modal-title').html('')
+    .find('.modal-body').html('')
+  var createRelatedModal = modalTemplate.html();
+  elem.find(".add-another").each(function(index, elem) {
+    var modalId = $(elem).attr('id') + '-modal';
+    if ($("#"+modalId).length == 0) {
+      $("body").append(createRelatedModal.replace('create-related-modal', modalId))
+    }
+    $(elem).data('modal', modalId);
+  });
+  /*
+   * Generic function that loads the form associated with a hyperlink into
+   * the related modal.
+   *
+   * Constraints & Behavior:
+   *  1. <a> element is preceded immediately by a <select> element
+   *  2. <a> element has the following data attributes:
+   *      a. data-url: the URL to load the form from
+   *      b. data-modal: id of the associated modal that is loaded with the 
+   *         form and activated.
+   *  3. The activated modal's title is set to <a> element's text content.
+   *  4. If the activated form submission was successful, the sibling 'select'
+   *     element is popuplated with an <option> for the just added element.
+   */
+  $(elem).find(".add-another").click(function(evtObj) {
+    var url = $(this).data('url');
+    var title = $(this).text();
+    var select = $(this).prevAll('select');
+    var modalId = $(this).data('modal');
+    var modal = $('#' + modalId);
+    modal.find('.modal-body').load(url, function () {
+      modal.find('.modal-title').text(title);
+      bindAddAnother(modal);
+      modal.modal('show');
+      submitModalForm(modal.find('#create-edit-form'), '#'+modalId, 
+        function(xhr) {
+          $(select).append($("<option></option>").
+            attr("value", xhr.pk).text(xhr.name));
+          var newVal = $(select).val();
+          if ($(select).attr('multiple')) {
+            newVal.push(xhr.pk);
+          } else {
+            newVal = xhr.pk;
+          }
+          $(select).val(newVal).trigger('change');
+        })
+    });
+  });
+}
+
 $(document).ready(function() {
   // same handler for New Object and Edit Object
   $("[name=create_edit_object]").click(function(evtObj) {
@@ -101,75 +196,6 @@ $(document).ready(function() {
       }
     );
   });
-  /*
-   * Binds all '.add-another' hyperlinks under the given 'elem' with their own
-   * modals, each of which will hold the form for the .add-another's data-url
-   * value. Each such modal is given an id composed as the value of the 'a' 
-   * tag's 'id' value + '-modal'. The modal will be added only if a modal with
-   * the same id does not exist so as to avoid duplicate modals.
-  
-   * The 'a' tag is assigned the newly added modal's id, so that the associated
-   * modal dialog can be loaded with the respective url form content and 
-   * activated in a generic manner from a Javascript function.
-   */
-  var bindAddAnother = function(elem) {
-    // Modal dialog template derived from #create-edit-modal that'll be added at 
-    // the end of the <body> tag.
-    if ($("#add-related-modal").length == 0)
-      return;
-
-    var modalTemplate = $('<div/>').html($("#add-related-modal")[0].outerHTML);
-    $(modalTemplate)
-      .find('.modal').attr('id', 'create-related-modal')
-      .find('.modal-title').html('')
-      .find('.modal-body').html('')
-    var createRelatedModal = modalTemplate.html();
-    elem.find(".add-another").each(function(index, elem) {
-      var modalId = $(elem).attr('id') + '-modal';
-      if ($("#"+modalId).length == 0) {
-        $("body").append(createRelatedModal.replace('create-related-modal', modalId))
-      }
-      $(elem).data('modal', modalId);
-    });
-    /*
-     * Generic function that loads the form associated with a hyperlink into
-     * the related modal.
-     *
-     * Constraints & Behavior:
-     *  1. <a> element is preceded immediately by a <select> element
-     *  2. <a> element has the following data attributes:
-     *      a. data-url: the URL to load the form from
-     *      b. data-modal: id of the associated modal that is loaded with the 
-     *         form and activated.
-     *  3. The activated modal's title is set to <a> element's text content.
-     *  4. If the activated form submission was successful, the sibling 'select'
-     *     element is popuplated with an <option> for the just added element.
-     */
-    $(elem).find(".add-another").click(function(evtObj) {
-      var url = $(this).data('url');
-      var title = $(this).text();
-      var select = $(this).prevAll('select');
-      var modalId = $(this).data('modal');
-      var modal = $('#' + modalId);
-      modal.find('.modal-body').load(url, function () {
-        modal.find('.modal-title').text(title);
-        bindAddAnother(modal);
-        modal.modal('show');
-        submitModalForm(modal.find('#create-edit-form'), '#'+modalId, 
-          function(xhr) {
-            $(select).append($("<option></option>").
-              attr("value", xhr.pk).text(xhr.name));
-            var newVal = $(select).val();
-            if ($(select).attr('multiple')) {
-              newVal.push(xhr.pk);
-            } else {
-              newVal = xhr.pk;
-            }
-            $(select).val(newVal).trigger('change');
-          })
-      });
-    });
-  }
   // Bind any embedded .add-another links in the document to its own modal. 
   bindAddAnother($('body')); 
 
@@ -199,28 +225,17 @@ $(document).ready(function() {
      * processing, it does it from $(document).ready(). But for UI processing
      * on modal dialogs, it has to be done from $(document).on('shown.bs.modal').
      */
-    var sels = $(this).find('.django-select2');
-    if (sels.length > 0) {
-      $(sels).djangoSelect2({
-        dropdownParent: $(this)
-      });
-    }
+    bindSelect2(this);
+    // var sels = $(this).find('.django-select2');
+    // if (sels.length > 0) {
+    //   $(sels).djangoSelect2({
+    //     dropdownParent: $(this)
+    //   });
+    // }
 
-    // trigger the crudform.ready event
-    triggerCrudFormReady(this);
+    // // trigger the crudform.ready event
+    // triggerCrudFormReady(this);
   });
-
-  function triggerCrudFormReady(elem) {
-    // Triggers crudform.ready event on an activated form if it's
-    // not the delete-form
-    var form = $(elem).find("form");
-    if (form) {
-      var ev = $.Event(CRUDFORM_READY);
-      if (form.attr('id') != 'delete-form') { // exclude delete-form
-        form.trigger(ev);
-      }
-    }
-  }
 
   /*
    * Trigger CRUDFORM_READY event, if we're in legacy_crud mode. Since
