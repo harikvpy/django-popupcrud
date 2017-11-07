@@ -86,4 +86,9 @@ History
 * Support custom form init args through ``PopupCrudViewSet.get_form_kwargs()``
 * ``PopupCrudViewSet.new_url`` and ``PopupCrudViewSet.list_url`` are determined
   through ``PopupCrudViewSet.get_new_url()`` and 
-  ``PopupCrudViewSet.get_list_url``.
+  ``PopupCrudViewSet.get_list_url()`` throughout the code.
+
+0.4.1 (2017-11-6)
++++++++++++++++++
+* Fix an issue where when form with errors is rendered select2 and add-related
+  widgets are not bound correctly
