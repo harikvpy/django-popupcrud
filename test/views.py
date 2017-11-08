@@ -77,6 +77,10 @@ class BookCrudViewset(PopupCrudViewSet):
         'author': reverse_lazy("new-author")
     }
     legacy_crud = True
+    item_actions = [
+        ('Up', 'glyphicon glyphicon-ok', 'up_vote'),
+        ('Down', 'glyphicon glyphicon-remove', 'down_vote'),
+    ]
 
     @staticmethod
     def get_edit_url(obj):
@@ -89,3 +93,9 @@ class BookCrudViewset(PopupCrudViewSet):
     @staticmethod
     def get_detail_url(obj):
         return reverse_lazy("books:detail", kwargs={'pk': obj.pk})
+
+    def up_vote(self, request, book):
+        return True, "Up vote successful"
+
+    def down_vote(self, request, book):
+        return True, "Down vote successful"

@@ -15,7 +15,7 @@ RE_CREATE_EDIT_FORM = r"\n<form class='form-horizontal' id='create-edit-form' ac
 MODAL_PATTERNS = [
     r'<div class="modal fade".*id="create-edit-modal"',
     r'<div class="modal fade".*id="delete-modal"',
-    r'<div class="modal fade".*id="delete-result-modal"',
+    r'<div class="modal fade".*id="action-result-modal"',
     r'<div class="modal fade".*id="add-related-modal"',
 ]
 
@@ -259,3 +259,47 @@ class PopupCrudViewSetTests(TestCase):
         self.assertIsNotNone(reverse("books:detail", kwargs={'pk': book.pk}))
         self.assertIsNotNone(reverse("books:update", kwargs={'pk': book.pk}))
         self.assertIsNotNone(reverse("books:delete", kwargs={'pk': book.pk}))
+
+    def test_item_action_links(self):
+        """
+        Tests that item custom action links are added to standard action
+        items for each row in the list.
+        """
+        name = "John"
+        john = Author.objects.create(name=name, age=25)
+        peter = Author.objects.create(name="Peter", age=30)
+        book1 = Book.objects.create(title='Title 1', author=john)
+        book2 = Book.objects.create(title='Title 2', author=peter)
+        response = self.client.get(reverse("books:list"))
+        item_action = "<a name=\'custom_action\' href=\'javascript:void(0);\' title=\'{0}\' data-action=\'{1}\' data-obj=\'{2}\'><span class=\'{3}\'></span></a>"
+        for book in response.context['object_list']:
+            up_pattern = item_action.format(
+                "Up", "0", book1.pk, "glyphicon glyphicon-ok")
+            down_pattern = item_action.format(
+                "Down", "1", book2.pk, "glyphicon glyphicon-remove")
+            self.assertContains(response, up_pattern)
+            self.assertContains(response, down_pattern)
+
+    def test_item_action(self):
+        """
+        Test that item custom action POST request results in a call to the
+        CrudViewSet method specified.
+
+        We cannot test JavaScript from unit test framework, but we can simulate
+        the relevant JS script behavior and run through the backend python code
+        for custom item actions.
+        """
+        name = "John"
+        john = Author.objects.create(name=name, age=25)
+        book = Book.objects.create(title='Title 1', author=john)
+        response = self.client.post(reverse("books:list"), data={
+            'action': '0', 'item': book.pk})
+        result = json.loads(response.content.decode('utf-8'))
+        self.assertEquals(result, {'result': True,
+                                   'message': "Up vote successful"})
+
+        response = self.client.post(reverse("books:list"), data={
+            'action': '1', 'item': book.pk})
+        result = json.loads(response.content.decode('utf-8'))
+        self.assertEquals(result, {'result': True,
+                                   'message': "Down vote successful"})

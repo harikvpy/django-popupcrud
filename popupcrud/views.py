@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=too-many-lines
 """ Popupcrud views """
 
-from functools import update_wrapper
 from collections import OrderedDict
 
 from django import forms
 from django.conf import settings
 from django.conf.urls import include, url
-from django.core.exceptions import ImproperlyConfigured, FieldDoesNotExist
+from django.core.exceptions import (ImproperlyConfigured, FieldDoesNotExist,
+                                    ObjectDoesNotExist)
 from django.shortcuts import render_to_response
 from django.views import generic
 from django.http import JsonResponse
@@ -427,6 +428,27 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
                 p[k] = v
         return '?%s' % urlencode(sorted(p.items()))
 
+    def post(self, request, *args, **kwargs):
+        action = request.POST.get('action', None)
+        pk = request.POST.get('item', None)
+        try:
+            if action and pk:
+                obj = self.model.objects.get(pk=pk)
+                result = self._viewset._invoke_action(
+                    self.request, int(action), obj)
+                return JsonResponse({
+                    'result': result[0],
+                    'message': result[1]
+                })
+
+        except (ValueError, IndexError, ObjectDoesNotExist):
+            pass
+
+        return JsonResponse({
+            'result': False,
+            'message': "Invalid operation"
+        })
+
 
 class TemplateNameMixin(object):
     """
@@ -772,6 +794,28 @@ class PopupCrudViewSet(object):
     #: hierarchy of the page.
     breadcrumbs_context_variable = 'breadcrumbs'
 
+    #: Item actions are user specified actions to be performed on a row item in
+    #: list view. Each item action is specified as a 3-tuple with the following
+    #: attributes:
+
+    #:     * its title
+    #:     * its icon css such as ``glyphicon glyphicon-ok``
+    #:     * its action handler, which is the name of the CrudViewSet method to
+    #:       be called when user selects the action. This method has the
+    #:       following signature::
+    #:
+    #:           def action_handler(self, request, item):
+    #:               # action processing
+    #:
+    #:               return (True, "Action completed")
+    #:
+    #:       The return value from the action handler is a 2-tuple that
+    #:       consists of a boolean success indicator and a message. The message
+    #:       is displayed to the user when the action is completed.
+    #:
+    #: Also see ``get_item_actions()`` documentation below.
+    item_actions = []
+
     @classonlymethod
     def _generate_view(cls, crud_view_class, **initkwargs):
         """
@@ -1091,3 +1135,51 @@ class PopupCrudViewSet(object):
         provided by these keys.
         """
         return {}
+
+    def get_item_actions(self, obj):
+        """
+        Determine the custom actions for the given model object that
+        is displayed after the standard Edit & Delete actions in list view.
+
+        :param obj: The row object for which actions are being queried.
+
+        :rtype: A list of action 3-tuple (as explained in ``item_actions``)
+                objects relevant for the given object. If no actions are to be
+                presented for the object, an empty list(``[]``) can be
+                returned.
+
+        Default implementation returns the value of ``item_actions`` class
+        variable.
+
+        Since this method is called once for each row item, you can customize the
+        actions that is presented for each object. You can also altogether turn
+        off all actions for an object by returning an empty list(``[]``).
+        """
+        return self.item_actions
+
+    def _invoke_action(self, request, index, item):
+        """
+        Invokes the custom action specified by the index.
+
+        Parameters:
+            request - HttpRequest object
+            index - the index of the action into get_item_actions() list
+            item_or_list - the item upon which action is to be performed
+
+        Return:
+            Action result as a 2-tuple: (bool, message)
+
+        Raises:
+            Index error if the action index specified is outside the scope
+            of the array returned by get_item_actions().
+        """
+        actions = self.get_item_actions(item)
+        if index >= len(actions):
+            raise IndexError
+
+        action = actions[index][2]  # method to invoke
+        action_method = getattr(self, action)
+        if callable(action_method):
+            return action_method(request, item)
+
+        return (False, ugettext("Action failed"))

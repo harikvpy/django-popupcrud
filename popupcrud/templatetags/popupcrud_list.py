@@ -221,7 +221,16 @@ def render_item_actions(context, obj):
 
     edit_action = edit_template.format(edit_url, edit_title) if edit_url else ''
     delete_action = delete_template.format(delete_url, delete_title) if delete_url else ''
-    return mark_safe("%s %s" % (edit_action, delete_action))
+    custom_actions = []
+    for index, action in enumerate(view._viewset.get_item_actions(obj)):
+        custom_actions.append(
+            "<a name='custom_action' href='javascript:void(0);' title='{0}' data-action='{1}' data-obj='{2}'><span class='{3}'></span></a>".format(
+                action[0], index, obj.pk, action[1]))
+
+    item_actions = ("%s %s" % (edit_action, delete_action))
+    if custom_actions:
+        item_actions = "%s %s" % (item_actions, " ".join(custom_actions))
+    return mark_safe(item_actions)
 
 
 def render_list_display(view, obj, context):

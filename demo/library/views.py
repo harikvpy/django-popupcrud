@@ -84,6 +84,9 @@ class BookCrudViewset(PopupCrudViewSet):
     legacy_crud = {
         'create': True,
     }
+    item_actions = [
+        ('Approve', 'glyphicon glyphicon-ok', 'approve')
+    ]
 
     @staticmethod
     def get_edit_url(obj):
@@ -96,6 +99,9 @@ class BookCrudViewset(PopupCrudViewSet):
     @staticmethod
     def get_detail_url(obj):
         return reverse_lazy("library:books:detail", kwargs={'pk': obj.pk})
+
+    def approve(self, request, item_or_list):
+        return True, "Request has been approved"
 
 
 class AuthorRatingForm(forms.Form):

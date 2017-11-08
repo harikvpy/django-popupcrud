@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n bootstrap3 %}
+{% load i18n bootstrap3 bsmodal %}
 {% block extrahead %}
 {{ form.media.css }}
 {{ form.media.js }}
@@ -11,4 +11,8 @@
     {% trans "Save" as submit %}
     {% bootstrap_button submit button_type="submit" button_class="btn-primary" %}
 </form>
+{% bsmodal '??' 'add-related-modal' close_title_button=Yes %}
+    {# modal body will be filled in by jQuery.load(<new_object_url>) return value #}
+    ??
+{% endbsmodal %}
 {% endblock content %}

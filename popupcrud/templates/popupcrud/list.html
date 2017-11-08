@@ -54,8 +54,8 @@
         </div>
     </form >
 {% endbsmodal %}
-{% trans 'Deleted' as deleted %}
-{% bsmodal deleted 'delete-result-modal' close_title_button=Yes header_bg_css=bg-primary %}
+{% trans 'Action Result' as result %}
+{% bsmodal result 'action-result-modal' close_title_button=Yes header_bg_css=bg-primary %}
     <div id='id_delete_result'></div><br/>
     <div class="text-center form-group">
         <button type="button" class="btn btn-default" data-dismiss="modal">{% trans 'Close' %}</button>
