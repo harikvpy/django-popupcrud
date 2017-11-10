@@ -92,3 +92,12 @@ History
 +++++++++++++++++
 * Fix an issue where when form with errors is rendered select2 and add-related
   widgets are not bound correctly
+
+0.5.0 (2017-11-10)
+++++++++++++++++++
+* Add custom item action support
+* Clean up JavaScript by encapsulating all methods in its own namespace & 
+  reducing code duplication
+* Add missing CSS styles to popupcrud.css
+* Empty_list_message class variable now allows embedded html tags (value is
+  wrapped in mark_safe() before placing in template context)
