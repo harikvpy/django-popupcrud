@@ -8,20 +8,16 @@
 thead th.sorted .text {
     padding-right: 42px;
 }
-
 thead th.sorted a.sortremove {
     visibility: hidden;
 }
-
 table thead th.sorted:hover a.sortremove {
     visibility: visible;
 }
-
 table thead th.sorted .sortoptions {
     float: right;
     text-align: right;
 }
-
 table thead th.sorted .sortpriority {
     font-size: .6em;
     text-align: center;
@@ -29,7 +25,6 @@ table thead th.sorted .sortpriority {
     margin-left: 1px;
     margin-right: 1px;
 }
-
 table thead th.sorted .sortoptions a {
     position: relative;
     width: 14px;
@@ -38,11 +33,9 @@ table thead th.sorted .sortoptions a {
     background: url(../img/sorting-icons.svg) 0 0 no-repeat;
     background-size: 14px auto;
 }
-
 table thead th.sorted .sortoptions a.sortremove {
     background-position: 0 0;
 }
-
 table thead th.sorted .sortoptions a.sortremove:after {
     content: '\\';
     position: absolute;
@@ -52,31 +45,25 @@ table thead th.sorted .sortoptions a.sortremove:after {
     font-size: 18px;
     color: #999;
 }
-
 table thead th.sorted .sortoptions a.sortremove:focus:after,
 table thead th.sorted .sortoptions a.sortremove:hover:after {
     color: #447e9b;
 }
-
 table thead th.sorted .sortoptions a.sortremove:focus,
 table thead th.sorted .sortoptions a.sortremove:hover {
     background-position: 0 -14px;
 }
-
 table thead th.sorted .sortoptions a.ascending {
     background-position: 0 -28px;
 }
-
 table thead th.sorted .sortoptions a.ascending:focus,
 table thead th.sorted .sortoptions a.ascending:hover {
     background-position: 0 -42px;
 }
-
 table thead th.sorted .sortoptions a.descending {
     top: 1px;
     background-position: 0 -56px;
 }
-
 table thead th.sorted .sortoptions a.descending:focus,
 table thead th.sorted .sortoptions a.descending:hover {
     background-position: 0 -70px;
@@ -86,4 +73,16 @@ thead th.sorted .text {
 }
 .empty-list-icon {
     font-size: 5em;
+}
+.push-30-t { 
+    margin-top: 30px;
+}
+.push-30 { 
+    margin-bottom: 30px;
+}
+.push-50-t { 
+    margin-top: 50px;
+}
+.push-50 { 
+    margin-bottom: 50px;
 }
