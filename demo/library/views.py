@@ -87,6 +87,8 @@ class BookCrudViewset(PopupCrudViewSet):
     item_actions = [
         ('Approve', 'glyphicon glyphicon-ok', 'approve')
     ]
+    empty_list_icon = 'glyphicon glyphicon-book'
+    empty_list_message = 'You have not defined any books.<br/>Create a book to get started.'
 
     @staticmethod
     def get_edit_url(obj):
