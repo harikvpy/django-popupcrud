@@ -19,6 +19,7 @@ from django.utils.decorators import classonlymethod
 from django.utils.translation import ugettext_lazy as _, ugettext, override
 from django.utils.http import urlencode
 from django.utils import six
+from django.utils.safestring import mark_safe
 
 #from django.contrib.admin import ModelAdmin
 
@@ -1102,7 +1103,7 @@ class PopupCrudViewSet(object):
 
         Returns the value of ``empty_list_message`` property by default.
         """
-        return self.empty_list_message
+        return mark_safe(self.empty_list_message)
 
     def get_breadcrumbs(self):
         """
