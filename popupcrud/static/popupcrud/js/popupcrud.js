@@ -199,19 +199,10 @@ const CRUDFORM_READY = "crudform.ready";
       $('#delete-modal .modal-body form').attr(
         'action', $(evtObj.target).parent('a').data('url'));
       $('#delete-modal').modal('show');
+      var title = $(this).children('span').attr('title');
       submitModalForm('#delete-form', '#delete-modal', 
         function(xhr) {
-          var result = xhr.result;
-          $("#action-result-modal #id_delete_result").html(xhr.message);
-          $('#action-result-modal').on('hidden.bs.modal', xhr.result ? 
-            function(evtObj) { 
-              $('#action-result-modal').off('hidden.bs.modal');
-              location.reload();
-            } : 
-            function(evtObj) { 
-              $('#action-result-modal').off('hidden.bs.modal');
-            });
-          $('#action-result-modal').modal('show');
+          showActionResult(xhr.result, title, xhr.message);
         }
       );
     },
@@ -228,18 +219,30 @@ const CRUDFORM_READY = "crudform.ready";
           item: $(this).data('obj')
         },
         success: function (xhr, ajaxOptions, thrownError) {
-          $("#action-result-modal #id_delete_result").html(xhr.message);
-          $('#action-result-modal').on('hidden.bs.modal', xhr.result ? 
-            function(evtObj) { 
-              $('#action-result-modal').off('hidden.bs.modal');
-              location.reload();
-            } : 
-            function(evtObj) { 
-              $('#action-result-modal').off('hidden.bs.modal');
-            });
-          $('#action-result-modal').modal('show');
+          showActionResult(xhr.result, title, xhr.message);
         }
       });
+    },
+    // Show the action result message in a modal
+    //
+    // Parameters:
+    //      result: bool, action success indicator
+    //      title: title for the dialog
+    //      message: message to be displayed in the modal
+    // Returns:
+    //      None
+    showActionResult = function(result, title, message) {
+      $("#action-result-modal .modal-title").text(title);
+      $("#action-result-modal #id_action_result").html(message);
+      $('#action-result-modal').on('hidden.bs.modal', result ? 
+        function(evtObj) { 
+          $('#action-result-modal').off('hidden.bs.modal');
+          location.reload();
+        } : 
+        function(evtObj) { 
+          $('#action-result-modal').off('hidden.bs.modal');
+        });
+      $('#action-result-modal').modal('show');
     };
 
     $("[name=create_edit_object]").click(handleCreateEdit);
