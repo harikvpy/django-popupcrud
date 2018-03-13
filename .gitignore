@@ -103,9 +103,5 @@ ENV/
 # mypy
 .mypy_cache/
 
-# visual studio
-.vs
-.vscode
-
 # python virtualenv
 pyenv
