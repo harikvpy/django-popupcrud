@@ -1,0 +1,88 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "name": "Python: Attach",
+            "type": "python",
+            "request": "attach",
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "${workspaceFolder}",
+            "port": 3000,
+            "secret": "my_secret",
+            "host": "localhost"
+        },
+        {
+            "name": "Python: Terminal (integrated)",
+            "type": "python",
+            "request": "launch",
+            "stopOnEntry": true,
+            "pythonPath": "${config:python.pythonPath}",
+            "program": "${file}",
+            "cwd": "",
+            "console": "integratedTerminal",
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "debugOptions": [],
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "name": "Python: Terminal (external)",
+            "type": "python",
+            "request": "launch",
+            "stopOnEntry": true,
+            "pythonPath": "${config:python.pythonPath}",
+            "program": "${file}",
+            "cwd": "",
+            "console": "externalTerminal",
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "debugOptions": [],
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "name": "Python: Django Shell",
+            "type": "python",
+            "request": "launch",
+            "stopOnEntry": true,
+            "pythonPath": "${config:python.pythonPath}",
+            "program": "${workspaceFolder}/demo/manage.py",
+            "cwd": "${workspaceFolder}/demo/",
+            "args": [
+                "shell",
+                "--settings",
+                "demo.settings",
+            ],
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "debugOptions": [
+                "RedirectOutput",
+            ]
+        },
+        {
+            "name": "Python: Django Server",
+            "type": "python",
+            "request": "launch",
+            "stopOnEntry": true,
+            "pythonPath": "${config:python.pythonPath}",
+            "program": "${workspaceFolder}/demo/manage.py",
+            "cwd": "${workspaceFolder}/demo/",
+            "args": [
+                "runserver",
+                "--settings",
+                "demo.settings",
+                "--noreload",
+                "--nothreading"
+            ],
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "debugOptions": [
+                "RedirectOutput",
+                "DjangoDebugging"
+            ]
+        }
+    ]
+}
