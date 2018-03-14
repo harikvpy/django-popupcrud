@@ -6,6 +6,7 @@ from django.shortcuts import render
 from django.views import generic
 from django import forms
 from django.contrib import messages
+
 from popupcrud.widgets import RelatedFieldPopupFormWidget
 
 try:
@@ -26,14 +27,21 @@ class AuthorForm(forms.ModelForm):
         model = Author
         fields = ('name', 'penname', 'age')
 
+    def clean_sex(self):
+        data = self.cleaned_data['sex']
+        if data == 'M':
+            raise forms.ValidationError('Sex has to be Female!')
+        return data
+
 
 class AuthorCrudViewset(PopupCrudViewSet):
     model = Author
-    fields = ('name', 'penname', 'age')
+    form_class = AuthorForm
+    #fields = ('name', 'penname', 'age')
     list_display = ('name', 'penname', 'age', 'half_age', 'double_age')
     list_url = reverse_lazy("library:authors")
     new_url = reverse_lazy("library:new-author")
-    legacy_crud = True
+    legacy_crud = False
 
     """
     form_class = AuthorForm
@@ -44,7 +52,7 @@ class AuthorCrudViewset(PopupCrudViewSet):
     """
 
     def half_age(self, author):
-        return author.age/2
+        return author.age/2 if author.age else '-'
     half_age.label = "Half life"
     half_age.order_field = 'age'
 
@@ -52,7 +60,7 @@ class AuthorCrudViewset(PopupCrudViewSet):
         return reverse_lazy("library:edit-author", kwargs={'pk': obj.pk})
 
     def get_delete_url(self, obj):
-        if obj.age < 18:
+        if not obj.age or obj.age < 18:
             return None
         return reverse_lazy("library:delete-author", kwargs={'pk': obj.pk})
 
@@ -171,3 +179,54 @@ class MultipleRelatedObjectDemoView(generic.FormView):
     form_class = MultipleRelatedObjectForm
     template_name = "library/form.html"
     success_url = reverse_lazy("library:multi-related-object-demo")
+
+
+class CustomBookForm(forms.ModelForm):
+    price = forms.DecimalField()
+    # role = forms.ChoiceField(choices=(
+    #     ('A', 'Administrator'),
+    #     ('B', 'Manager'),
+    #     ('C', 'Resident'),
+    #     ('C', 'Guest'),
+    # ))
+
+    class Meta:
+        model = Book
+        fields = ('title', 'isbn')
+
+    def clean_price(self):
+        price = self.cleaned_data['price']
+        if price < 0:
+            raise forms.ValidationError('Price has to be > 0!')
+        return price
+
+class FormsetAuthorCrudViewset(AuthorCrudViewset):
+
+    list_url = reverse_lazy("library:formset-authors:list")
+
+    new_url = reverse_lazy("library:formset-authors:create")
+    modal_sizes = {
+        'create_edit': 'large',
+        'delete': 'small',
+        'detail': 'normal'
+    }
+
+    def get_edit_url(self, obj):
+        return reverse_lazy("library:formset-authors:update", kwargs={'pk': obj.pk})
+
+    def get_delete_url(self, obj):
+        if not obj.age or obj.age < 18:
+            return None
+        return reverse_lazy("library:formset-authors:delete", kwargs={'pk': obj.pk})
+
+    def get_formset_class(self):
+        """
+        Returns the inline formset class for adding Books to this author.
+        """
+        return forms.models.inlineformset_factory(
+            Author,
+            Book,
+            form=CustomBookForm,
+            fields=('title', 'isbn'),
+            can_delete=True,
+            extra=2)

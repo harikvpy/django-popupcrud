@@ -86,3 +86,40 @@ thead th.sorted .text {
 .push-50 { 
     margin-bottom: 50px;
 }
+ .modal-formset .table {
+    margin-left: -12px;
+}
+ .modal-formset .table>tbody>tr>td {
+    border-top: 0px gray solid;
+}
+.modal-formset-field {
+    margin-right: 0px;
+    width: auto;
+}
+.modal-formset .table>tbody>tr>td:last-child .modal-formset-field {
+    display: none;
+}
+.modal-formset .table>tbody>tr>td:last-child  {
+    vertical-align: middle;
+}
+.modal-body {
+    max-height: 75%;
+    overflow-y: auto;
+}
+.modal-body::-webkit-scrollbar {
+    width: .6em;
+}
+.modal-body::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 3px rgba(0,0,0,0.2);
+    border-radius: 8px;
+}
+.modal-body::-webkit-scrollbar-thumb {
+    background-color: darkgrey;
+    outline: 1px solid darkgray;
+    border-radius: 8px;
+}
+.modal-body .help-block {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    font-size: 0.9em;
+}

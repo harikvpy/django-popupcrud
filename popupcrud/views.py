@@ -3,8 +3,10 @@
 """ Popupcrud views """
 
 from collections import OrderedDict
+import copy
 
 from django import forms
+from django.db import transaction
 from django.conf import settings
 from django.conf.urls import include, url
 from django.core.exceptions import (ImproperlyConfigured, FieldDoesNotExist,
@@ -22,7 +24,6 @@ from django.utils import six
 from django.utils.safestring import mark_safe
 
 #from django.contrib.admin import ModelAdmin
-
 
 from pure_pagination import PaginationMixin
 
@@ -74,6 +75,12 @@ ERROR_FLAG = 'e'
 IGNORED_PARAMS = (
     ALL_VAR, ORDER_VAR, ORDER_TYPE_VAR, SEARCH_VAR)
 
+DEFAULT_MODAL_SIZES = {
+    'create_edit': 'normal',
+    'delete': 'normal',
+    'detail': 'normal',
+}
+
 class AjaxObjectFormMixin(object):
     """
     Mixin facilitates single object create/edit functions to be performed
@@ -89,6 +96,13 @@ class AjaxObjectFormMixin(object):
     of releated objects from a popup without leaving the context of the model
     object view being created/edited.
     """
+    def get_context_data(self, **kwargs):
+        if 'formset' not in kwargs:
+            formset = self._viewset.get_formset()
+            if formset:
+                kwargs['formset'] = formset
+        return super(AjaxObjectFormMixin, self).get_context_data(**kwargs)
+    
     def get_ajax_response(self):
         return JsonResponse({
             'name': str(self.object), # object representation
@@ -111,17 +125,37 @@ class AjaxObjectFormMixin(object):
         related_popups  = getattr(self._viewset, 'related_object_popups', {})
         for fname in related_popups:
             if fname in form.fields:
-                field = form.fields[fname]
+                _ = form.fields[fname]
                 if isinstance(form.fields[fname], forms.ModelChoiceField):
                     form.fields[fname].widget = RelatedFieldPopupFormWidget(
                         widget=forms.Select(choices=form.fields[fname].choices),
                         new_url=related_popups[fname])
 
+    @transaction.atomic
     def form_valid(self, form): # pylint: disable=missing-docstring
-        retval = super(AjaxObjectFormMixin, self).form_valid(form)
-        if self.request.is_ajax():
-            return self.get_ajax_response()
-        return retval
+        self.object = form.save(commit=False)
+        formset_class = self._viewset.get_formset_class()
+        formset = None
+        if formset_class:
+            formset = formset_class(
+                self.request.POST, 
+                instance=self.object)
+
+        if not formset or formset.is_valid():
+            self.object.save()
+            if formset:
+                formset.save()
+
+            if self.request.is_ajax():
+                return self.get_ajax_response()
+
+            return super(AjaxObjectFormMixin, self).form_valid(form)
+
+        kwargs = { 'form': form }
+        if formset:
+            kwargs.update({'formset': formset})
+        return self.render_to_response(self.get_context_data(**kwargs))
+    
 
     def handle_no_permission(self):
         if self.request.is_ajax():
@@ -153,7 +187,7 @@ class AttributeThunk(object):
         return self._viewset.get_list_url()
 
     def get_form_kwargs(self):
-        kwargs = super(AttributeThunk, self).get_form_kwargs()
+        kwargs = super(AttributeThunk, self).get_form_kwargs() # pylint: disable=E1101
         kwargs.update(self._viewset.get_form_kwargs())
         return kwargs
 
@@ -164,12 +198,12 @@ class AttributeThunk(object):
         kwargs['viewset'] = self._viewset
         kwargs[self._viewset.breadcrumbs_context_variable] = \
                 self._viewset.get_breadcrumbs()
-        if not self.request.is_ajax() and not isinstance(self, ListView):
+        if not self.request.is_ajax() and not isinstance(self, ListView): # pylint: disable=E1101
             # for legacy crud views, add the listview url to the breadcrumb
             kwargs[self._viewset.breadcrumbs_context_variable].append(
                 (self._viewset.model._meta.verbose_name_plural,
                  self._viewset.get_list_url()))
-        return super(AttributeThunk, self).get_context_data(**kwargs)
+        return super(AttributeThunk, self).get_context_data(**kwargs) # pylint: disable=E1101
 
     @property
     def login_url(self):
@@ -215,11 +249,11 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
 
     @property
     def media(self):
-        popups = self._viewset.popups
+        _ = self._viewset.popups
         # don't load popupcrud.js if all crud views are set to 'legacy'
         popupcrud_media = forms.Media(
             css={'all': ('popupcrud/css/popupcrud.css',)},
-            js=('popupcrud/js/popupcrud.js',))
+            js=('popupcrud/js/popupcrud.js', 'popupcrud/js/jquery.formset.js'))
 
         # Can't we load media of forms created using modelform_factory()?
         # Need to investigate.
@@ -269,6 +303,9 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
         context['edit_item_dialog_title'] = ugettext("Edit {0}").format(
             self.model._meta.verbose_name)
         context['legacy_crud'] = self._viewset.legacy_crud
+        modal_sizes = copy.deepcopy(DEFAULT_MODAL_SIZES)
+        modal_sizes.update(self._viewset.modal_sizes)
+        context['modal_sizes'] = modal_sizes
         return context
 
     def _get_default_ordering(self):
@@ -278,39 +315,6 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
         elif self.lookup_opts.ordering:
             ordering = self.lookup_opts.ordering
         return ordering
-
-    def get_ordering_field_columns(self):
-        """
-        Returns an OrderedDict of ordering field column numbers and asc/desc
-        """
-
-        # We must cope with more than one column having the same underlying sort
-        # field, so we base things on column numbers.
-        ordering = self._get_default_ordering()
-        ordering_fields = OrderedDict()
-        if ORDER_VAR not in self.params:
-            # for ordering specified on ModelAdmin or model Meta, we don't know
-            # the right column numbers absolutely, because there might be more
-            # than one column associated with that ordering, so we guess.
-            for field in ordering:
-                if field.startswith('-'):
-                    field = field[1:]
-                    order_type = 'desc'
-                else:
-                    order_type = 'asc'
-                for index, attr in enumerate(self.list_display):
-                    if self.get_ordering_field(attr) == field:
-                        ordering_fields[index] = order_type
-                        break
-        else:
-            for p in self.params[ORDER_VAR].split('.'):
-                none, pfx, idx = p.rpartition('-')
-                try:
-                    idx = int(idx)
-                except ValueError:
-                    continue  # skip it
-                ordering_fields[idx] = 'desc' if pfx == '-' else 'asc'
-        return ordering_fields
 
     def get_ordering_field(self, field_name):
         """
@@ -351,7 +355,7 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
             order_params = params[ORDER_VAR].split('.')
             for p in order_params:
                 try:
-                    none, pfx, idx = p.rpartition('-')
+                    _, pfx, idx = p.rpartition('-')
                     field_name = self._viewset.list_display[int(idx)]
                     order_field = self.get_ordering_field(field_name)
                     if not order_field:
@@ -403,7 +407,7 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
                         break
         else:
             for p in self.params[ORDER_VAR].split('.'):
-                none, pfx, idx = p.rpartition('-')
+                _, pfx, idx = p.rpartition('-')
                 try:
                     idx = int(idx)
                 except ValueError:
@@ -489,8 +493,8 @@ class TemplateNameMixin(object):
         return templates
 
 
-class CreateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
-                 PermissionRequiredMixin, generic.CreateView):
+class CreateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin, 
+    PermissionRequiredMixin, generic.CreateView):
 
     popupcrud_template_name = "form_template"
     form_template = "popupcrud/form.html"
@@ -499,9 +503,12 @@ class CreateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
         super(CreateView, self).__init__(viewset_cls, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        kwargs['pagetitle'] = _("New {0}").format(
+        kwargs['pagetitle'] = ugettext("New {0}").format(
             self._viewset.model._meta.verbose_name)
         kwargs['form_url'] = self._viewset.get_new_url()
+        # formset = self._viewset.get_formset()
+        # if formset:
+        #     kwargs['formset'] = formset
         return super(CreateView, self).get_context_data(**kwargs)
 
 
@@ -532,7 +539,7 @@ class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
         super(UpdateView, self).__init__(viewset_cls, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        kwargs['pagetitle'] = _("Edit {0}").format(
+        kwargs['pagetitle'] = ugettext("Edit {0}").format(
             self._viewset.model._meta.verbose_name)
         kwargs['form_url'] = self._viewset.get_edit_url(self.object)
         return super(UpdateView, self).get_context_data(**kwargs)
@@ -546,7 +553,7 @@ class DeleteView(AttributeThunk, PermissionRequiredMixin, generic.DeleteView):
         super(DeleteView, self).__init__(viewset_cls, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        kwargs['pagetitle'] = _("Delete {0}").format(self._viewset.model._meta.verbose_name)
+        kwargs['pagetitle'] = ugettext("Delete {0}").format(self._viewset.model._meta.verbose_name)
         kwargs['model_options'] = self._viewset.model._meta
         return super(DeleteView, self).get_context_data(**kwargs)
 
@@ -576,7 +583,7 @@ class DeleteView(AttributeThunk, PermissionRequiredMixin, generic.DeleteView):
                     str(self.object))
             })
         else:
-            messages.info(self.request, _("{0} {1} deleted").format(
+            messages.info(self.request, ugettext("{0} {1} deleted").format(
                 self._viewset.model._meta.verbose_name,
                 str(self.object)))
             return retval
@@ -588,36 +595,6 @@ class PopupCrudViewSet(object):
     for each model that you need to build CRUD views for.
     """
 
-    """
-        Optional:
-
-            Class Properties:
-                list_template: the template file to use for list view
-                create_template: template to use for create new object view
-                edit_template: template to use for editing an existing object view
-                detail_template: template to use for detail view
-                delete_template: template to use for delete view
-
-            Methods:
-                get_detail_url: staticmetod. Return the url to the object's
-
-                    detail view. Default implementation in base class returns
-                    None, which disables the object detail view.
-
-    3. Connect the five different methods to the url resolver. For example:
-
-        MyModelViewset(PopupCrudViewSet):
-            model = MyModel
-            ...
-
-        urlpatterns = [
-            url(r'mymodel/$', MyModelViewset.list(), name='mymodels-list'),
-            url(r'mymodel/new/$', MyModelViewset.create(), name='new-mymodel'),
-            url(r'mymodel/(?P<pk>\d+)/$', MyModelViewset.detail(), name='mymodel-detail'),
-            url(r'mymodel/(?P<pk>\d+)/edit/$', MyModelViewset.update(), name='edit-mymodel'),
-            url(r'mymodel/(?P<pk>\d+)/delete/$', MyModelViewset.delete(), name='delete-mymodel'),
-            ]
-    """
     _urls = None    # urls cache, so that we don't build it for every request
 
     #: The model to build CRUD views for. This is a required attribute.
@@ -817,6 +794,8 @@ class PopupCrudViewSet(object):
     #: Also see ``get_item_actions()`` documentation below.
     item_actions = []
 
+    modal_sizes = {}
+    
     @classonlymethod
     def _generate_view(cls, crud_view_class, **initkwargs):
         """
@@ -1078,7 +1057,7 @@ class PopupCrudViewSet(object):
             }
             if isinstance(self.legacy_crud, dict):
                 _popups = popups_enabled
-                for k, v in self.legacy_crud.items():
+                for k, v in self.legacy_crud.items(): # pylint: disable=E1101
                     _popups[k] = False if v else True
             else:
                 popups_disabled = popups_enabled.copy()
@@ -1137,6 +1116,16 @@ class PopupCrudViewSet(object):
         """
         return {}
 
+    def get_formset_class(self):
+        return None
+
+    def get_formset(self):
+        formset_class = self.get_formset_class()
+        if formset_class:
+            self._formset_class = formset_class
+            return formset_class(**self.view.get_form_kwargs()) # pylint: disable=E1102
+        return None
+       
     def get_item_actions(self, obj):
         """
         Determine the custom actions for the given model object that

@@ -50,12 +50,13 @@ register = template.Library()
 
 class ModalDialog(template.Node):
     def __init__(self, dialog_id, title, content_nodelist, close_title_button=True,
-                header_bg_css=''):
+                header_bg_css='', size=''):
         self.dialog_id = dialog_id
         self.title = template.Variable(title)
         self.content_nodelist = content_nodelist
         self.close_title_button = close_title_button
         self.header_bg_css = header_bg_css
+        self.size_hint = size
 
     def render(self, context):
         try:
@@ -63,12 +64,29 @@ class ModalDialog(template.Node):
         except template.VariableDoesNotExist:
             title = self.title.var
 
+        # Try to work out the modal size css if size hint is a 
+        # template.Variable() instance.
+        size_css = ''   # defaults to normal size
+        if isinstance(self.size_hint, template.Variable):
+            try:
+                hint_value = self.size_hint.resolve(context)
+            except template.VariableDoesNotExist:
+                hint_value = ''
+            size_css_values = {
+                'small': 'modal-sm',
+                'normal': '',
+                'large': 'modal-lg'
+            }
+            if hint_value in size_css_values.keys():
+                size_css = size_css_values[hint_value]
+
         templ = template.loader.get_template("popupcrud/modal.html")
         return templ.render({
             'id': self.dialog_id,
             'title': title,
             'body': self.content_nodelist.render(context),
             'close_btn': self.close_title_button,
+            'size_css': size_css
         })
 
 
@@ -99,6 +117,7 @@ def bsmodal(parser, token):
     dialog_id = strip_quotes(contents[2]) if len(contents) > 2 else "modal"
     close_title_button = True
     header_bg_css = ''
+    modal_size = ''
     # optional elements
     for i in range(3, len(contents)):
         option = strip_quotes(contents[i]).split('=')
@@ -106,8 +125,25 @@ def bsmodal(parser, token):
            close_title_button = True if option[1] in ['True', 'Yes'] else False
         elif option[0] == 'header_bg_css':
             header_bg_css = option[1]
+        elif option[0] == 'size':
+            print("Modal size: {0}".format(option[1]))
+            modal_size = template.Variable(option[1])
+            # value = option[1]
+            # try:
+            #     var = template.Variable(option[1])
+            #     value = var.resolve()
+            # except template.VariableDoesNotExist:
+            #     pass
+
+            # sizes = {
+            #     'small': 'modal-sm',
+            #     'normal': '',
+            #     'large': 'modal-lg',
+            # }
+            # if value in sizes.keys():
+            #     modal_size = sizes[value]
 
     nodelist = parser.parse(('endbsmodal',))
     parser.delete_first_token()
     return ModalDialog(
-        dialog_id, title, nodelist, close_title_button, header_bg_css)
+        dialog_id, title, nodelist, close_title_button, header_bg_css, modal_size)

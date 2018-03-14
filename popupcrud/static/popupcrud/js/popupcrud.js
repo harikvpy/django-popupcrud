@@ -38,8 +38,8 @@ const CRUDFORM_READY = "crudform.ready";
                 success: function (xhr, ajaxOptions, thrownError) {
                     if ( $(xhr).find('.has-error').length > 0 ||
                          $(xhr).find('.alert').length > 0) {
-                        $(modal).find('.block-content').html(xhr);
-                        bindAddAnother(modal);
+                        $(modal).find('.modal-body').html(xhr);
+                        bindAddAnother($(modal));
                         bindSelect2(modal);
                         submitModalForm(form, modal, complete);
                     } else {

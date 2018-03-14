@@ -23,13 +23,14 @@ class Author(models.Model):
         return self.name
 
     def double_age(self):
-        return self.age*2
+        return self.age*2 if self.age else ''
     double_age.label = "Double Age"
 
 
 @python_2_unicode_compatible
 class Book(models.Model):
     title = models.CharField(_("Title"), max_length=128)
+    isbn = models.CharField("ISBN", max_length=12)
     author = models.ForeignKey(Author)
 
     class Meta:

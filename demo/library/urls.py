@@ -18,6 +18,7 @@ urlpatterns = [
     url(r'^mro/$', views.MultipleRelatedObjectDemoView.as_view(), name='multi-related-object-demo'),
 
     url(r'^books/', views.BookCrudViewset.urls()),
+    url(r'^formsetauthors/', views.FormsetAuthorCrudViewset.urls(namespace='formset-authors')),
 ]
 
 #     url(r'^books/$', views.BookCrudViewset.list(), name='books'),

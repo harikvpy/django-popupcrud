@@ -9,7 +9,11 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext
 from django.utils.html import format_html
 from django.utils import six
+from django.utils.text import capfirst
 from django.contrib.admin.utils import lookup_field,label_for_field as lff
+
+from bootstrap3.renderers import FormRenderer, FormsetRenderer
+from bootstrap3.forms import render_field, render_form
 
 register = Library()
 
@@ -168,7 +172,7 @@ def list_field_value(view, obj, field, context, index):
         # object and if found, evaluates it to return the value. So it's safe
         # to pass it a ViewSet instance. Of course, if the lookup_field
         # implementation changes, we'll to change this code accordingly.
-        f, attr, value = lookup_field(field, obj, view._viewset)
+        f, _, value = lookup_field(field, obj, view._viewset)
 
         # for fields that have 'choices=' set conver the value into its
         # more descriptive string.
@@ -273,3 +277,209 @@ def empty_list(context):
         'new_button_text': ugettext("New {0}").format(
             viewset.model._meta.verbose_name),
     }
+
+class PopupCrudFormsetFormRenderer(FormRenderer):
+    '''A special class to render formset forms fields as table 
+    row columns'''
+
+    def render_fields(self):
+        rendered_fields = []
+        visible_fields = []
+        hidden_fields = []
+        for field in self.form:
+            if not field.is_hidden:
+                visible_fields.append(field)
+            else:
+                hidden_fields.append(field)
+        first = True
+
+        for field in visible_fields:
+            field_html = self.__render_field(field)
+            if first:
+                hidden_html = ''
+                for field in hidden_fields:
+                    hidden_html += self.__render_field(field)
+                    field_html = hidden_html + field_html
+                first = False
+            field_html = "<td>" + field_html + "</td>"
+            rendered_fields.append(field_html)
+        return '\n'.join(rendered_fields)
+
+    def __render_field(self, field):
+        return render_field(
+            field,
+            layout=self.layout,
+            form_group_class=self.form_group_class,
+            field_class=self.field_class,
+            label_class=self.label_class,
+            show_label=False,
+            show_help=self.show_help,
+            exclude=self.exclude,
+            set_required=self.set_required,
+            set_disabled=self.set_disabled,
+            size=self.size,
+            horizontal_label_class=self.horizontal_label_class,
+            horizontal_field_class=self.horizontal_field_class,
+            error_css_class=self.error_css_class,
+            required_css_class=self.required_css_class,
+            bound_css_class=self.bound_css_class)
+
+
+class PopupCrudFormsetRenderer(FormsetRenderer):
+
+    def render_form(self, form, **kwargs):
+        renderer = PopupCrudFormsetFormRenderer(form, **kwargs)
+        return renderer._render() # render_form(form, **kwargs)
+
+    def render_forms(self):
+        render_header = True
+        html = "<table class='table table-condensed'>"
+        if render_header:
+            html += self.render_header()
+        html += "<tbody>"
+        for form in self.formset.forms:
+            html += "<tr>"+self.render_form(
+                form,
+                layout=self.layout,
+                form_group_class=self.form_group_class,
+                field_class=self.field_class,
+                label_class=self.label_class,
+                show_label=False,
+                show_help=self.show_help,
+                exclude=self.exclude,
+                set_required=self.set_required,
+                set_disabled=self.set_disabled,
+                size=self.size,
+                horizontal_label_class=self.horizontal_label_class,
+                horizontal_field_class=self.horizontal_field_class,
+            )+"</tr>"
+        html += "</tbody></table>"
+        return html
+
+    def render_header(self):
+        headers = []
+        for field in self.formset.forms[0]:
+            if not field.is_hidden:
+                headers.append("<th>%s</th>" % (field.label if field.name != 'DELETE' else '&nbsp;'))
+        return "<thead><tr>{0}</tr></thead>".format("".join(headers))
+
+
+@register.simple_tag
+def render_formset(formset):
+    '''
+    Renders the formset within a bootstrap horizontal form layout. This requires 
+    special handling as standard bootstrap formset rendering does not work well 
+    within a <form class='form-horizontal'></form> element.
+
+    After many attempts and using some suggestions from SO, the following layout
+    seems work:
+
+    <form class='form-horizontal'>
+        {% bootstrap_form form layout='horizontal'%}
+
+        <div id="id_formset">
+            <label class="col-md-3 control-label">Members</label>
+            <div class='col-md-9' style="max-height: 250px; overflow-y: scroll;">
+                <table class='table table-condensed'>
+                    <tbody>
+                        {% for form in formset.forms %}
+                        <tr>
+                            <td>
+                                <div class='form-group' style="margin-bottom: 0px;">
+                                    <div class='form-inline'>
+                                        {% for field in form %}
+                                            <input class="form-control input-sm" id="field.name" placeholder="field.label">
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td style='vertical-align: middle;'>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <submit/reset buttons>
+    </form>    
+
+    For rendering the innermost <input../>, we use django-bootstrap3's render_field() function
+    so that it can use the appropriate classes depending on the field type.
+
+    This template tag builds the above fragment for the given formset.
+    '''
+
+    model = formset.model
+    label = capfirst(model.__name__)
+    if hasattr(model._meta, 'verbose_name_plural'):
+        label = model._meta.verbose_name_plural
+
+    renderer = PopupCrudFormsetRenderer(formset, form_group_class='modal-formset-field')
+    output2 = r"""
+    <div id="id_formset" class="modal-formset">
+        <label class="col-md-3 control-label">{0}</label>
+        <div class='col-md-9 table-wrapper'>
+            {1}
+        </div>
+    </div>
+    """.format(label, renderer._render())
+
+    return mark_safe(output2)
+    
+    # output = r"""
+    # <div id="id_formset">
+    #     <label class="col-md-3 control-label">{0}</label>
+    #     <div class='col-md-9' style="max-height: 250px; overflow-y: scroll;">
+    #         <table class='table table-condensed'>
+    #             <tbody>
+    # """.format(label)
+
+    # # don't forget the formset management form fields
+    # output += formset.management_form.as_p()
+
+    # # render each form of the formset
+    # for form in formset.forms:
+    #     output += _render_formset_form(form)
+
+    # # render the closing HTML fragments for the leading header
+    # output += r'''
+    #             </tbody>
+    #         </table>
+    #     </div>
+    # </div>
+    # '''
+
+    # return mark_safe(output)    # has to be marked as safe!
+
+def _render_formset_form(form):
+    '''Renders a formset form within the style setting headers above.'''
+
+    output = r'''
+    <tr>
+        <td>
+            <div class='form-group' style="margin-bottom: 0px;">
+                <div class='form-inline'>
+    '''
+
+    for field in form:
+        # Delegate the hard bits to django-bootstrap3 field renderer
+        field_str = render_field(
+            field, 
+            form_group_class='modal-formset-field', 
+            field_class='hide' if field.name == 'DELETE' else '',
+            show_label=False, 
+            show_help=False, 
+            size='small')
+        output += field_str
+
+    output += r'''
+                </div>
+            </div>
+        </td>
+        <td style='vertical-align: middle;'>
+        </td>
+    </tr>
+    '''
+    return output
+ 
