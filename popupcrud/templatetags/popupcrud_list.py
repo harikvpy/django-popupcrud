@@ -182,7 +182,7 @@ def list_field_value(view, obj, field, context, index):
                 value = dict(choices)[value]
 
     except AttributeError:
-        f, attr, value = (None, None, '')
+        f, _, value = (None, None, '')
 
     if index == 0:
         detail_url = view._viewset.get_detail_url(obj)

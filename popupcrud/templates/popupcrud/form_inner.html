@@ -4,7 +4,6 @@
     {% bootstrap_form form layout='horizontal' %}
     {% if formset %}
         {% render_formset formset %}
-        <script>
         {% comment %}
         Note that we're using $.one() instead of the more natural @.on() as we want 
         the handler to be removed after running. Otherwise, with every activation of
@@ -12,6 +11,7 @@
         formset form table and an extra set of 'Delete' buttons will be added to
         the end of every form row.
         {% endcomment %}
+        <script>
         $(document).one("crudform.ready", function(event) {
             console.log("Crudform is ready!")
             $("#id_formset table tbody tr").formset({
