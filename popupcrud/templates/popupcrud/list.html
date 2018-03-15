@@ -25,7 +25,7 @@
 {% empty_list %}
 {% endif %}
 {% if viewset.popups.create or viewset.popups.update %}
-{% bsmodal '??' 'create-edit-modal' close_title_button=Yes header_bg_css=bg-primary size=modal_sizes.create_edit %}
+{% bsmodal '??' 'create-edit-modal' close_title_button=Yes header_bg_css=bg-primary size=modal_sizes.create_update %}
     {# modal body will be filled in by jQuery.load(<new_object_url>) return value #}
     ??
 {% endbsmodal %}

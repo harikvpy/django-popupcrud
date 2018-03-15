@@ -165,6 +165,8 @@ Note how ``Select2Widget`` is essentially a drop in replacement for the native
 <http://django-select2.readthedocs.io/en/latest/get_started.html>`_
 for instructions on integrating it with your project.
 
+.. _providing-your-own-templates:
+
 Providing your own templates
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Out of the box, ``popupcrud`` comes with its own templates for rendering all
@@ -209,3 +211,71 @@ look like this::
 The same pattern is applicable to other CRUD views as well where template files
 such as ``book_form.html``, ``confirm_book_delete.html`` are looked for first
 before using popupcrud's own internal templates.
+
+Use the formset feature
+~~~~~~~~~~~~~~~~~~~~~~~
+To add a formset to edit objects of a child model, override the 
+``PopupCrudViewSet.get_formset_class()`` method in your derived class returning
+the ``BaseModelFormSet`` class which will be used to render the formset along 
+with the model form. Formsets are always rendered at the bottom of the model form.
+
+To illustrate with an example, assume that we have a ``Book`` table with
+the following definition::
+
+    class Book(models.Model):
+        title = models.CharField('Title', max_length=128)
+        isbn = models.CharField('ISBN', max_length=12)
+        author = models.ForeignKey(Author)
+
+        class Meta:
+            ordering = ('title',)
+            verbose_name = "Book"
+            verbose_name_plural = "Books"
+
+        def __str__(self):
+            return self.title
+
+To allow the user to edit one or more ``Book`` objects while
+creating or editing a ``Author`` object, you just need to extend the
+``AuthorCrudViewset`` in the previous example to::
+
+    from django import forms
+    from popupcrud.views import PopupCrudViewSet
+
+    class AuthorViewSet(PopupCrudViewSet):
+        model = Author
+        ...
+
+        def get_formset_class(self):
+            return forms.models.inlineformset_factory(
+                Author,
+                Book,
+                fields=('title', 'isbn'),
+                can_delete=True,
+                extra=1)
+
+Now when the modal for create or edit views will show a formset
+at the bottom with two fields -- ``Book.title`` and ``Book.isbn``.
+A button at the bottom of the formset allows additional formset rows
+to be added. Each formset row will also have a button at the
+right to delete the row.
+
+The sample above uses the django formset factory function to 
+dynamically build a formset class based on models parent-child
+relationship. You may also return a custom formset class that is 
+derived from ``BaseModelFormSet`` with appropriate specializations
+to suit your requirements.
+
+``BaseModelFormSet`` base class requirement is due to 
+``PopupCrudViewSet`` invoking the ``save()`` method of the class
+to save formset data if all of them pass the field validation rules.
+
+A note about formset feature. Since formset forms are rendered in a
+tabular format, and since the modal dialogs are not resizable, there
+is a limit to the number of formset form fields that can be specified
+before it becomes unusable for the user. To cater for this, 
+``PopupCrudViewSet`` now allows the modal sizes to be adjusted through
+the ``modal_sizes`` class attribute. This allows you to specify the
+appropriate modal size based on your form and formset field count & 
+sizes. See :ref:`modal sizes <modal_sizes>`.
+

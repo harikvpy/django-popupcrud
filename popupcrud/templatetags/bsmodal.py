@@ -14,6 +14,8 @@ A tag to help creation of Bootstrap modal dialogs. You may use this tag as:
     :dialogId: Required. The id of the modal window specified as string literal.
     :close_title_button: Optional. A flag indicating whether to show the modal
         window close button on the titlebar. Specify one of ``Yes`` or ``No``.
+    :size: Optional. Dialog size hint. Acceptable values:
+        ``{small|normal|large}``. Defaults to ``normal``.
 
 
 This would create a hidden dialog with title ``dialogTitle`` and id ``dialogId``.
@@ -25,13 +27,15 @@ The final rendered html fragment would look like this:
     .. code:: html
 
         <div class="modal fade" tabindex="-1" role="dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title">{{dialogTitle}}</h4>
-                </div>
-                <div class="modal-body">
-                    <..content between bsmodal & endbsmodal tags..>
+            <div class="modal-dialog modal-dialog-top" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">{{dialogTitle}}</h4>
+                    </div>
+                    <div class="modal-body">
+                        <..content between bsmodal & endbsmodal tags..>
+                    </div>
                 </div>
             </div>
         </div>
@@ -40,8 +44,8 @@ The html template for the modal is stored in ``popupcrud/modal.html``. So if you
 want to custom styling of the modal windows, you may define your own template
 in your projects ``templates`` folder.
 
-Refer to Boostrap `documentation <https://getbootstrap.com/docs/3.3/javascript/#modals>`_ on modals for more information on how to show
-and hide the modal windows.
+Refer to Boostrap `docs <https://getbootstrap.com/docs/3.3/javascript/#modals>`_
+on modals for more information on how to show and hide the modal windows.
 """
 
 from django import template
@@ -50,7 +54,7 @@ register = template.Library()
 
 class ModalDialog(template.Node):
     def __init__(self, dialog_id, title, content_nodelist, close_title_button=True,
-                header_bg_css='', size=''):
+                 header_bg_css='', size=''):    # pylint: disable=R0913
         self.dialog_id = dialog_id
         self.title = template.Variable(title)
         self.content_nodelist = content_nodelist
@@ -64,7 +68,7 @@ class ModalDialog(template.Node):
         except template.VariableDoesNotExist:
             title = self.title.var
 
-        # Try to work out the modal size css if size hint is a 
+        # Try to work out the modal size css if size hint is a
         # template.Variable() instance.
         size_css = ''   # defaults to normal size
         if isinstance(self.size_hint, template.Variable):
@@ -109,9 +113,9 @@ def bsmodal(parser, token):
 
     if len(contents) < 2:
         raise template.TemplateSyntaxError(
-                "%r requires dialog title as argument" % \
-                        token.contents.split()[0]
-                )
+            "%r requires dialog title as argument" %
+            token.contents.split()[0]
+        )
 
     title = strip_quotes(contents[1])
     dialog_id = strip_quotes(contents[2]) if len(contents) > 2 else "modal"
@@ -122,7 +126,7 @@ def bsmodal(parser, token):
     for i in range(3, len(contents)):
         option = strip_quotes(contents[i]).split('=')
         if option[0] == 'close_title_button':
-           close_title_button = True if option[1] in ['True', 'Yes'] else False
+            close_title_button = True if option[1] in ['True', 'Yes'] else False
         elif option[0] == 'header_bg_css':
             header_bg_css = option[1]
         elif option[0] == 'size':

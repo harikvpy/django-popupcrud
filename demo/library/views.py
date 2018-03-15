@@ -204,7 +204,7 @@ class FormsetAuthorCrudViewset(AuthorCrudViewset):
 
     new_url = reverse_lazy("library:formset-authors:create")
     modal_sizes = {
-        'create_edit': 'large',
+        'create_update': 'large',
         'delete': 'small',
         'detail': 'normal'
     }
