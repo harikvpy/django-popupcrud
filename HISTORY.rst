@@ -101,3 +101,9 @@ History
 * Add missing CSS styles to popupcrud.css
 * Empty_list_message class variable now allows embedded html tags (value is
   wrapped in mark_safe() before placing in template context)
+
+0.6.0 (2018-03-15)
+++++++++++++++++++
+* Add formset support in CRUD create/update views
+* Add size option to bsmodal template tags
+* Fixes to some minor bugs
