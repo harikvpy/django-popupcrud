@@ -5,8 +5,8 @@ The demo project in folder ``demo`` shows four usage scenarios of
 ``PopupCrudViewSet``. To run the demo, issue the following commands from 
 ``demo`` folder::
 
-    ./manage migrate
-    ./manage runserver
+    ./manage migrate --settings demo.settings
+    ./manage runserver --settings demo.settings
 
 Homepage has links to the various views in the project that demonstrates 
 different use cases. Each link has a brief description on the type of use case
