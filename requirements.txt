@@ -4,3 +4,4 @@ django-pure-pagination==0.3.0
 # for dev env
 pylint-django
 sphinx
+twine
