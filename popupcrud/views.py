@@ -9,8 +9,8 @@ from django import forms
 from django.db import transaction
 from django.conf import settings
 from django.conf.urls import include, url
-from django.core.exceptions import (ImproperlyConfigured, FieldDoesNotExist,
-                                    ObjectDoesNotExist)
+from django.core.exceptions import (
+    FieldDoesNotExist, ObjectDoesNotExist)
 from django.shortcuts import render_to_response
 from django.views import generic
 from django.http import JsonResponse
@@ -102,7 +102,7 @@ class AjaxObjectFormMixin(object):
             if formset:
                 kwargs['formset'] = formset
         return super(AjaxObjectFormMixin, self).get_context_data(**kwargs)
-    
+
     def get_ajax_response(self):
         return JsonResponse({
             'name': str(self.object), # object representation
@@ -122,7 +122,7 @@ class AjaxObjectFormMixin(object):
         return form
 
     def _init_related_fields(self, form):
-        related_popups  = getattr(self._viewset, 'related_object_popups', {})
+        related_popups = getattr(self._viewset, 'related_object_popups', {})
         for fname in related_popups:
             if fname in form.fields:
                 _ = form.fields[fname]
@@ -138,7 +138,7 @@ class AjaxObjectFormMixin(object):
         formset = None
         if formset_class:
             formset = formset_class(
-                self.request.POST, 
+                self.request.POST,
                 instance=self.object)
 
         if not formset or formset.is_valid():
@@ -151,16 +151,15 @@ class AjaxObjectFormMixin(object):
 
             return super(AjaxObjectFormMixin, self).form_valid(form)
 
-        kwargs = { 'form': form }
+        kwargs = {'form': form}
         if formset:
             kwargs.update({'formset': formset})
         return self.render_to_response(self.get_context_data(**kwargs))
-    
 
     def handle_no_permission(self):
         if self.request.is_ajax():
             return render_to_response('popupcrud/403.html')
-        super(AjaxObjectFormMixin, self).handle_no_permission()
+        return super(AjaxObjectFormMixin, self).handle_no_permission()
 
 
 class AttributeThunk(object):
@@ -439,7 +438,7 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
         try:
             if action and pk:
                 obj = self.model.objects.get(pk=pk)
-                result = self._viewset._invoke_action(
+                result = self._viewset.invoke_action(
                     self.request, int(action), obj)
                 return JsonResponse({
                     'result': result[0],
@@ -493,14 +492,11 @@ class TemplateNameMixin(object):
         return templates
 
 
-class CreateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin, 
-    PermissionRequiredMixin, generic.CreateView):
+class CreateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
+                 PermissionRequiredMixin, generic.CreateView):
 
     popupcrud_template_name = "form_template"
     form_template = "popupcrud/form.html"
-
-    def __init__(self, viewset_cls, *args, **kwargs):
-        super(CreateView, self).__init__(viewset_cls, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         kwargs['pagetitle'] = ugettext("New {0}").format(
@@ -518,9 +514,6 @@ class DetailView(AttributeThunk, TemplateNameMixin, PermissionRequiredMixin,
     popupcrud_template_name = "detail_template"
     detail_template = "popupcrud/detail.html"
 
-    def __init__(self, viewset_cls, *args, **kwargs):
-        super(DetailView, self).__init__(viewset_cls, *args, **kwargs)
-
     def get_context_data(self, **kwargs):
         kwargs['pagetitle'] = six.text_type(self.object)
         # _("{0} - {1}").format(
@@ -535,9 +528,6 @@ class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
     popupcrud_template_name = "form_template"
     form_template = "popupcrud/form.html"
 
-    def __init__(self, viewset_cls, *args, **kwargs):
-        super(UpdateView, self).__init__(viewset_cls, *args, **kwargs)
-
     def get_context_data(self, **kwargs):
         kwargs['pagetitle'] = ugettext("Edit {0}").format(
             self._viewset.model._meta.verbose_name)
@@ -548,9 +538,6 @@ class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
 class DeleteView(AttributeThunk, PermissionRequiredMixin, generic.DeleteView):
 
     template_name = "popupcrud/confirm_delete.html"
-
-    def __init__(self, viewset_cls, *args, **kwargs):
-        super(DeleteView, self).__init__(viewset_cls, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         kwargs['pagetitle'] = ugettext("Delete {0}").format(self._viewset.model._meta.verbose_name)
@@ -570,7 +557,7 @@ class DeleteView(AttributeThunk, PermissionRequiredMixin, generic.DeleteView):
                 'result': False,
                 'message': temp.render({}, self.request)
             })
-        super(DeleteView, self).handle_no_permission()
+        return super(DeleteView, self).handle_no_permission()
 
     def delete(self, request, *args, **kwargs):
         """ Override to return JSON success response for AJAX requests """
@@ -582,11 +569,11 @@ class DeleteView(AttributeThunk, PermissionRequiredMixin, generic.DeleteView):
                     self.model._meta.verbose_name,
                     str(self.object))
             })
-        else:
-            messages.info(self.request, ugettext("{0} {1} deleted").format(
-                self._viewset.model._meta.verbose_name,
-                str(self.object)))
-            return retval
+
+        messages.info(self.request, ugettext("{0} {1} deleted").format(
+            self._viewset.model._meta.verbose_name,
+            str(self.object)))
+        return retval
 
 
 class PopupCrudViewSet(object):
@@ -795,7 +782,7 @@ class PopupCrudViewSet(object):
     item_actions = []
 
     modal_sizes = {}
-    
+
     @classonlymethod
     def _generate_view(cls, crud_view_class, **initkwargs):
         """
@@ -1064,7 +1051,7 @@ class PopupCrudViewSet(object):
                 for k, v in popups_disabled.items():
                     popups_disabled[k] = False
                 _popups = popups_disabled if self.legacy_crud else popups_enabled
-            self._popups = _popups
+            self._popups = _popups  # pylint: disable=W0201
 
         return self._popups
 
@@ -1122,10 +1109,9 @@ class PopupCrudViewSet(object):
     def get_formset(self):
         formset_class = self.get_formset_class()
         if formset_class:
-            self._formset_class = formset_class
             return formset_class(**self.view.get_form_kwargs()) # pylint: disable=E1102
         return None
-       
+
     def get_item_actions(self, obj):
         """
         Determine the custom actions for the given model object that
@@ -1147,7 +1133,7 @@ class PopupCrudViewSet(object):
         """
         return self.item_actions
 
-    def _invoke_action(self, request, index, item):
+    def invoke_action(self, request, index, item):
         """
         Invokes the custom action specified by the index.
 

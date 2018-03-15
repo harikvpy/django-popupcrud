@@ -2,12 +2,9 @@
 from __future__ import unicode_literals
 
 from django.core.urlresolvers import reverse_lazy
-from django.shortcuts import render
 from django.views import generic
 from django import forms
 from django.contrib import messages
-
-from popupcrud.widgets import RelatedFieldPopupFormWidget
 
 try:
     from django_select2.forms import Select2Widget
@@ -15,9 +12,10 @@ try:
 except ImportError:
     _select2 = False
 
-
-from .models import Author, Book, AuthorRating, BookRating
 from popupcrud.views import PopupCrudViewSet
+from popupcrud.widgets import RelatedFieldPopupFormWidget
+
+from .models import Author, Book, BookRating
 
 # Create your views here.
 
@@ -51,7 +49,7 @@ class AuthorCrudViewset(PopupCrudViewSet):
     delete_permission_required = ('library.delete_author',)
     """
 
-    def half_age(self, author):
+    def half_age(self, author): # pylint: disable=R0201
         return author.age/2 if author.age else '-'
     half_age.label = "Half life"
     half_age.order_field = 'age'
@@ -110,7 +108,7 @@ class BookCrudViewset(PopupCrudViewSet):
     def get_detail_url(obj):
         return reverse_lazy("library:books:detail", kwargs={'pk': obj.pk})
 
-    def approve(self, request, item_or_list):
+    def approve(self, request, item_or_list):   # pylint: disable=R0201
         return True, "Request has been approved"
 
 
