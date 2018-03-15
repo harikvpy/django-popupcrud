@@ -10,7 +10,7 @@ from django.utils import six
 from .models import Author, Book
 from .views import AuthorCrudViewset, BookCrudViewset
 
-RE_CREATE_EDIT_FORM = r"\n<form class='form-horizontal' id='create-edit-form' action='{0}' method='post' accept-charset='utf-8'>.*</form>\n"
+RE_CREATE_EDIT_FORM = r"\n<form class=\'form-horizontal\' id=\'create-edit-form\' action=\'{0}\' method=\'post\' accept-charset=\'utf-8\'>.*</form>"
 
 MODAL_PATTERNS = [
     r'<div class="modal fade".*id="create-edit-modal"',
