@@ -67,29 +67,29 @@ table thead th.sorted .sortoptions a.descending {
 table thead th.sorted .sortoptions a.descending:focus,
 table thead th.sorted .sortoptions a.descending:hover {
     background-position: 0 -70px;
-}    
+}
 thead th.sorted .text {
     padding-right: 42px;
 }
 .empty-list-icon {
     font-size: 5em;
 }
-.push-30-t { 
+.push-30-t {
     margin-top: 30px;
 }
-.push-30 { 
+.push-30 {
     margin-bottom: 30px;
 }
-.push-50-t { 
+.push-50-t {
     margin-top: 50px;
 }
-.push-50 { 
+.push-50 {
     margin-bottom: 50px;
 }
- .modal-formset .table {
+.modal-formset .table {
     margin-left: -12px;
 }
- .modal-formset .table>tbody>tr>td {
+.modal-formset .table>tbody>tr>td {
     border-top: 0px gray solid;
 }
 .modal-formset-field {

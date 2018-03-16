@@ -53,8 +53,9 @@ from django import template
 register = template.Library()
 
 class ModalDialog(template.Node):
+    # pylint: disable=R0913
     def __init__(self, dialog_id, title, content_nodelist, close_title_button=True,
-                 header_bg_css='', size=''):    # pylint: disable=R0913
+                 header_bg_css='', size=''):
         self.dialog_id = dialog_id
         self.title = template.Variable(title)
         self.content_nodelist = content_nodelist

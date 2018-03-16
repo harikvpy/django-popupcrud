@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=W0212, R0914
 """ PopupCRUD list view template tags """
 
 from django.core.exceptions import FieldDoesNotExist
@@ -10,14 +11,15 @@ from django.utils.translation import ugettext
 from django.utils.html import format_html
 from django.utils import six
 from django.utils.text import capfirst
-from django.contrib.admin.utils import lookup_field,label_for_field as lff
+from django.contrib.admin.utils import lookup_field, label_for_field as lff
 
 from bootstrap3.renderers import FormRenderer, FormsetRenderer
-from bootstrap3.forms import render_field, render_form
+from bootstrap3.bootstrap import get_bootstrap_setting
+from bootstrap3.forms import render_field
+
+from popupcrud.views import ORDER_VAR
 
 register = Library()
-
-from popupcrud.views import ORDER_VAR, ORDER_TYPE_VAR
 
 def label_for_field(view, queryset, field_name):
     """
@@ -48,8 +50,8 @@ def label_for_field(view, queryset, field_name):
             # method exists, return its 'label' attribute value
             label = getattr(getattr(model, field_name), 'label', field_name.title())
         # query the viewset for a method with matching name
-        elif hasattr(view._viewset, field_name) and callable(
-            getattr(view._viewset, field_name)):
+        elif hasattr(view._viewset, field_name) and \
+            callable(getattr(view._viewset, field_name)):
             # method exists, return its 'label' attribute value
             label = getattr(getattr(view._viewset, field_name), 'label', field_name.title())
         else:
@@ -69,8 +71,7 @@ def _coerce_field_name(field_name, field_index):
     if callable(field_name):
         if field_name.__name__ == '<lambda>':
             return 'lambda' + str(field_index)
-        else:
-            return field_name.__name__
+        return field_name.__name__
     return field_name
 
 
@@ -102,10 +103,10 @@ def list_display_headers(view, queryset):
         order_type = ''
         new_order_type = 'asc'
         sort_priority = 0
-        sorted = False
+        sorted_field = False
         # Is it currently being sorted on?
         if i in ordering_field_columns:
-            sorted = True
+            sorted_field = True
             order_type = ordering_field_columns.get(i).lower()
             sort_priority = list(ordering_field_columns).index(i) + 1
             th_classes.append('sorted %sending' % order_type)
@@ -139,7 +140,7 @@ def list_display_headers(view, queryset):
         yield {
             "text": text,
             "sortable": True,
-            "sorted": sorted,
+            "sorted": sorted_field,
             "ascending": order_type == "asc",
             "sort_priority": sort_priority,
             "url_primary": view.get_query_string({ORDER_VAR: '.'.join(o_list_primary)}),
@@ -197,7 +198,7 @@ def list_field_value(view, obj, field, context, index):
                     detail_url, value, title)
 
         return mark_safe(six.text_type("{0}<div data-name='{1}'></div>").format(
-                value, view._viewset.get_obj_name(obj)))
+            value, view._viewset.get_obj_name(obj)))
 
     return value
 
@@ -279,7 +280,7 @@ def empty_list(context):
     }
 
 class PopupCrudFormsetFormRenderer(FormRenderer):
-    '''A special class to render formset forms fields as table 
+    '''A special class to render formset forms fields as table
     row columns'''
 
     def render_fields(self):
@@ -297,8 +298,8 @@ class PopupCrudFormsetFormRenderer(FormRenderer):
             field_html = self.__render_field(field)
             if first:
                 hidden_html = ''
-                for field in hidden_fields:
-                    hidden_html += self.__render_field(field)
+                for hidden_field in hidden_fields:
+                    hidden_html += self.__render_field(hidden_field)
                     field_html = hidden_html + field_html
                 first = False
             field_html = "<td>" + field_html + "</td>"
@@ -367,8 +368,8 @@ class PopupCrudFormsetRenderer(FormsetRenderer):
 @register.simple_tag
 def render_formset(formset):
     '''
-    Renders the formset within a bootstrap horizontal form layout. This requires 
-    special handling as standard bootstrap formset rendering does not work well 
+    Renders the formset within a bootstrap horizontal form layout. This requires
+    special handling as standard bootstrap formset rendering does not work well
     within a <form class='form-horizontal'></form> element.
 
     After many attempts and using some suggestions from SO, the following layout
@@ -402,7 +403,7 @@ def render_formset(formset):
             </div>
         </div>
         <submit/reset buttons>
-    </form>    
+    </form>
 
     For rendering the innermost <input../>, we use django-bootstrap3's render_field() function
     so that it can use the appropriate classes depending on the field type.
@@ -416,17 +417,19 @@ def render_formset(formset):
         label = model._meta.verbose_name_plural
 
     renderer = PopupCrudFormsetRenderer(formset, form_group_class='modal-formset-field')
+    label_class = get_bootstrap_setting('horizontal_label_class')
+    field_class = get_bootstrap_setting('horizontal_field_class')
     output2 = r"""
     <div id="id_formset" class="modal-formset">
-        <label class="col-md-3 control-label">{0}</label>
-        <div class='col-md-9 table-wrapper'>
+        <label class="{2} control-label">{0}</label>
+        <div class='{3} table-wrapper'>
             {1}
         </div>
     </div>
-    """.format(label, renderer._render())
+    """.format(label, renderer._render(), label_class, field_class) # pylint: disable=W0212
 
     return mark_safe(output2)
-    
+
     # output = r"""
     # <div id="id_formset">
     #     <label class="col-md-3 control-label">{0}</label>
@@ -465,11 +468,11 @@ def _render_formset_form(form):
     for field in form:
         # Delegate the hard bits to django-bootstrap3 field renderer
         field_str = render_field(
-            field, 
-            form_group_class='modal-formset-field', 
+            field,
+            form_group_class='modal-formset-field',
             field_class='hide' if field.name == 'DELETE' else '',
-            show_label=False, 
-            show_help=False, 
+            show_label=False,
+            show_help=False,
             size='small')
         output += field_str
 
@@ -482,4 +485,3 @@ def _render_formset_form(form):
     </tr>
     '''
     return output
- 

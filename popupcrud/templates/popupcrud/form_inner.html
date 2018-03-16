@@ -5,9 +5,9 @@
     {% if formset %}
         {% render_formset formset %}
         {% comment %}
-        Note that we're using $.one() instead of the more natural @.on() as we want 
+        Note that we're using $.one() instead of the more natural @.on() as we want
         the handler to be removed after running. Otherwise, with every activation of
-        the modal, an extra row of 'Add' button will be added to the bottom of the 
+        the modal, an extra row of 'Add' button will be added to the bottom of the
         formset form table and an extra set of 'Delete' buttons will be added to
         the end of every form row.
         {% endcomment %}
@@ -25,7 +25,7 @@
     {% trans "Save" as submit %}
     {% trans "Reset" as reset %}
     <div class="form-group">
-        <div class="col-md-offset-3 col-md-9">
+        <div class="text-center">
             {% bootstrap_button submit button_type="submit" button_class="btn-primary" %}
             {# {% bootstrap_button reset button_type="reset" button_class="btn-default" %} #}
             {% if request.is_ajax %}
