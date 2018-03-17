@@ -22,6 +22,7 @@ from django.utils.translation import ugettext_lazy as _, ugettext, override
 from django.utils.http import urlencode
 from django.utils import six
 from django.utils.safestring import mark_safe
+from django.utils.functional import cached_property
 
 #from django.contrib.admin import ModelAdmin
 
@@ -134,7 +135,7 @@ class AjaxObjectFormMixin(object):
     @transaction.atomic
     def form_valid(self, form): # pylint: disable=missing-docstring
         self.object = form.save(commit=False)
-        formset_class = self._viewset.get_formset_class()
+        formset_class = self._viewset.formset_class
         formset = None
         if formset_class:
             formset = formset_class(
@@ -143,6 +144,7 @@ class AjaxObjectFormMixin(object):
 
         if not formset or formset.is_valid():
             self.object.save()
+            form.save_m2m()
             if formset:
                 formset.save()
 
@@ -196,7 +198,7 @@ class AttributeThunk(object):
         kwargs[title_cv] = kwargs['pagetitle'] #self._viewset.get_page_title()
         kwargs['viewset'] = self._viewset
         kwargs[self._viewset.breadcrumbs_context_variable] = \
-                self._viewset.get_breadcrumbs()
+                copy.deepcopy(self._viewset.get_breadcrumbs())
         if not self.request.is_ajax() and not isinstance(self, ListView): # pylint: disable=E1101
             # for legacy crud views, add the listview url to the breadcrumb
             kwargs[self._viewset.breadcrumbs_context_variable].append(
@@ -234,18 +236,6 @@ class AttributeThunk(object):
         }
         return codes[self.__class__.__name__]
 
-
-class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
-               generic.ListView):
-    """ Model list view """
-
-    def __init__(self, viewset_cls, *args, **kwargs):
-        super(ListView, self).__init__(viewset_cls, *args, **kwargs)
-        request = kwargs['request']
-        self.params = dict(request.GET.items())
-        self.query = request.GET.get(SEARCH_VAR, '')
-        self.lookup_opts = self.model._meta
-
     @property
     def media(self):
         _ = self._viewset.popups
@@ -257,8 +247,27 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
         # Can't we load media of forms created using modelform_factory()?
         # Need to investigate.
         if self._viewset.form_class:
-            popupcrud_media += self._viewset.form_class().media
+            popupcrud_media += self._viewset.form_class(
+                **self._viewset.get_form_kwargs()).media
+
+        formset_class = self._viewset.formset_class
+        if formset_class:
+            fs_media = formset_class().media
+            popupcrud_media += fs_media
+
         return popupcrud_media
+
+
+class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
+               generic.ListView):
+    """ Model list view """
+
+    def __init__(self, viewset_cls, *args, **kwargs):
+        super(ListView, self).__init__(viewset_cls, *args, **kwargs)
+        request = kwargs['request']
+        self.params = dict(request.GET.items())
+        self.query = request.GET.get(SEARCH_VAR, '')
+        self.lookup_opts = self.model._meta
 
     def get_paginate_by(self, queryset):
         return self._viewset.get_paginate_by()
@@ -1126,6 +1135,10 @@ class PopupCrudViewSet(object):
         """
         return {}
 
+    @cached_property
+    def formset_class(self):
+        return self.get_formset_class()
+
     def get_formset_class(self):
         """
         Return the formset class to the child model of this parent model
@@ -1147,7 +1160,7 @@ class PopupCrudViewSet(object):
 
         By default returns None indicating no formset is associated with the model.
         """
-        formset_class = self.get_formset_class()
+        formset_class = self.formset_class
         if formset_class:
             return formset_class(**self.view.get_form_kwargs()) # pylint: disable=E1102
         return None

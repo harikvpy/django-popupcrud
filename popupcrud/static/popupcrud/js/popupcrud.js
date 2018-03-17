@@ -1,4 +1,4 @@
-/* 
+/*
  * Event raised after a create/update form is displayed and ready for further
  * manipulation by client code. This event can be trapped by client code to
  * add their own custom JavaScript initialization to the form. Using this event
@@ -15,8 +15,9 @@ const CRUDFORM_READY = "crudform.ready";
 
 (function($) {
   $.fn.popupCrud = function (opts) { // wrap all popupcrud functions in a closure
-    /* 
-     * Bind a submit function to a form embedded in a Bootstrap modal, which in 
+    var _formsetTemplate = null,
+    /*
+     * Bind a submit function to a form embedded in a Bootstrap modal, which in
      * turn uses AJAX POST request to submit the form data. When the form has been
      * successully submitted, the modal is hidden. If the submitted form has errors
      * the form is re-rendered with field errors highlighted as per Bootstrap
@@ -28,7 +29,7 @@ const CRUDFORM_READY = "crudform.ready";
                form submission
         complete: A function to be called upon successful form submission.
      */
-    var submitModalForm = function(form, modal, complete) {
+    submitModalForm = function(form, modal, complete) {
         $(form).submit(function(e) {
             e.preventDefault();
             $.ajax({
@@ -40,7 +41,9 @@ const CRUDFORM_READY = "crudform.ready";
                          $(xhr).find('.alert').length > 0) {
                         $(modal).find('.modal-body').html(xhr);
                         bindAddAnother($(modal));
-                        bindSelect2(modal);
+                        initFormset(modal)
+                        bindSelect2(modal, modal);
+                        triggerCrudFormReady(modal);
                         submitModalForm(form, modal, complete);
                     } else {
                         $(modal).modal('hide');
@@ -85,32 +88,30 @@ const CRUDFORM_READY = "crudform.ready";
       }
     },
     /*
-     * Bind select2 widget to any form controls with css style .django-select2
+     * Bind select2 widget to any form controls under 'parent' element
+     * with css style .django-select2.
      */
-    bindSelect2 = function(modal) {
-      var sels = $(modal).find('.django-select2');
+    bindSelect2 = function(selectParent, dropdownParent) {
+      var sels = $(selectParent).find('.django-select2');
       if (sels.length > 0) {
         $(sels).djangoSelect2({
-          dropdownParent: $(modal)
+          dropdownParent: $(dropdownParent)
         });
       }
-
-      // trigger the crudform.ready event
-      triggerCrudFormReady(modal);
     },
     /*
      * Binds all '.add-another' hyperlinks under the given 'elem' with their own
      * modals, each of which will hold the form for the .add-another's data-url
-     * value. Each such modal is given an id composed as the value of the 'a' 
+     * value. Each such modal is given an id composed as the value of the 'a'
      * tag's 'id' value + '-modal'. The modal will be added only if a modal with
      * the same id does not exist so as to avoid duplicate modals.
 
      * The 'a' tag is assigned the newly added modal's id, so that the associated
-     * modal dialog can be loaded with the respective url form content and 
+     * modal dialog can be loaded with the respective url form content and
      * activated in a generic manner from a Javascript function.
      */
     bindAddAnother = function(elem) {
-      // Modal dialog template derived from #create-edit-modal that'll be added at 
+      // Modal dialog template derived from #create-edit-modal that'll be added at
       // the end of the <body> tag.
       if ($("#add-related-modal").length == 0)
         return;
@@ -128,6 +129,7 @@ const CRUDFORM_READY = "crudform.ready";
         }
         $(elem).data('modal', modalId);
       });
+
       /*
        * Generic function that loads the form associated with a hyperlink into
        * the related modal.
@@ -136,7 +138,7 @@ const CRUDFORM_READY = "crudform.ready";
        *  1. <a> element is preceded immediately by a <select> element
        *  2. <a> element has the following data attributes:
        *      a. data-url: the URL to load the form from
-       *      b. data-modal: id of the associated modal that is loaded with the 
+       *      b. data-modal: id of the associated modal that is loaded with the
        *         form and activated.
        *  3. The activated modal's title is set to <a> element's text content.
        *  4. If the activated form submission was successful, the sibling 'select'
@@ -152,7 +154,7 @@ const CRUDFORM_READY = "crudform.ready";
           modal.find('.modal-title').text(title);
           bindAddAnother(modal);
           modal.modal('show');
-          submitModalForm(modal.find('#create-edit-form'), '#'+modalId, 
+          submitModalForm(modal.find('#create-edit-form'), '#'+modalId,
             function(xhr) {
               $(select).append($("<option></option>").
                 attr("value", xhr.pk).text(xhr.name));
@@ -167,20 +169,22 @@ const CRUDFORM_READY = "crudform.ready";
         });
       });
     },
+    // handler for New/Edit object actions
     handleCreateEdit = function(evtObj) {
       evtObj.preventDefault();
       var url = $(this).data('url');
       var title = $(this).data('title');
       $('#create-edit-modal .modal-body').load(url, function () {
+        cacheFormsetTemplate();
         $('#create-edit-modal .modal-title').text(title);
         bindAddAnother($("#create-edit-modal"));
         $('#create-edit-modal').modal('show');
-        submitModalForm('#create-edit-form', 
+        submitModalForm('#create-edit-form',
           '#create-edit-modal', function(xhr) {
             location.reload();
           });
       });
-    }, 
+    },
     // handler for object detail view
     handleObjectDetail = function(evtObj) {
       evtObj.preventDefault();
@@ -200,7 +204,7 @@ const CRUDFORM_READY = "crudform.ready";
         'action', $(evtObj.target).parent('a').data('url'));
       $('#delete-modal').modal('show');
       var title = $(this).children('span').attr('title');
-      submitModalForm('#delete-form', '#delete-modal', 
+      submitModalForm('#delete-form', '#delete-modal',
         function(xhr) {
           showActionResult(xhr.result, title, xhr.message);
         }
@@ -215,7 +219,7 @@ const CRUDFORM_READY = "crudform.ready";
         type: 'POST',
         data: {
           csrfmiddlewaretoken: getCookie('csrftoken'),
-          action: action, 
+          action: action,
           item: $(this).data('obj')
         },
         success: function (xhr, ajaxOptions, thrownError) {
@@ -234,29 +238,56 @@ const CRUDFORM_READY = "crudform.ready";
     showActionResult = function(result, title, message) {
       $("#action-result-modal .modal-title").text(title);
       $("#action-result-modal #id_action_result").html(message);
-      $('#action-result-modal').on('hidden.bs.modal', result ? 
-        function(evtObj) { 
+      $('#action-result-modal').on('hidden.bs.modal', result ?
+        function(evtObj) {
           $('#action-result-modal').off('hidden.bs.modal');
           location.reload();
-        } : 
-        function(evtObj) { 
+        } :
+        function(evtObj) {
           $('#action-result-modal').off('hidden.bs.modal');
         });
       $('#action-result-modal').modal('show');
+    },
+    // reads the formset form template and stores in _formsetTemplate variable.
+    cacheFormsetTemplate = function() {
+      popupCrudFormsetFormTempl = $("#id_formset table>tbody>tr:last").clone(true).removeAttr('id');
+      popupCrudFormsetFormTempl.find('input:hidden[id $= "-DELETE"]').remove();
+      this._formsetTemplate = popupCrudFormsetFormTempl;
+    },
+    /**
+     * Initializes any embedded formsets in the form such that formset form rows
+     * can be added dynamically.
+     *
+     * If a formset is present, it is expected to be embedded within a
+     * <div id="id_formset"></div> element.
+     *
+     * Parameters:
+     *  parent - the parent element under which formset will be searched.
+     */
+    initFormset = function(parent) {
+      var formsetDiv = $(parent).find('div#id_formset');
+      if (formsetDiv) {  // presence of div indicates form has formset.
+        var prefix = formsetDiv.find('input[name*=TOTAL_FORMS]').attr('name').split('-')[0];
+        formsetDiv.find("table tbody tr").formset({
+          formTemplate: this._formsetTemplate,
+          prefix: prefix,
+          addText: '<button type="button" class="btn btn-default btn-sm" aria-label="Add"><span class="glyphicon glyphicon-plus-sign"></span></button>',
+          deleteText: "<span class='glyphicon glyphicon-trash'></span>",
+          added: function (row) {
+            var dropDownParent = $(document.body);  // default
+            if (formsetDiv.parents('.modal').length > 0) {
+              dropDownParent = formsetDiv.parents('.modal');
+            }
+            bindSelect2(row, dropDownParent);
+          }
+        });
+      }
     };
 
-    $("[name=create_edit_object]").click(handleCreateEdit);
-    $("[name=object_detail]").click(handleObjectDetail);
-    $("a[name='delete_object']").click(handleDeleteObject);
-    $("a[name='custom_action']").click(handleCustomAction);
-
-    // Bind any embedded .add-another links in the document to its own modal. 
-    bindAddAnother($('body')); 
-
-    /* 
-     * Adjusts the just activated modal window's z-index to a value higher 
-     * than the previously activated modal window's z-index. This will 
-     * ensure that each newly activated modal is layered on top of all 
+    /*
+     * Adjusts the just activated modal window's z-index to a value higher
+     * than the previously activated modal window's z-index. This will
+     * ensure that each newly activated modal is layered on top of all
      * previously activated modals achieving the layered dialog effect.
 
      * Code borrowed from: http://jsfiddle.net/CxdUQ/
@@ -270,7 +301,7 @@ const CRUDFORM_READY = "crudform.ready";
       }, 0);
     });
     $(document).on('shown.bs.modal', '.modal', function (event) {
-      /* 
+      /*
        * Initialize any django-select2 fields in the dialog. If the dialog does
        * not have any select2 fields, this code does nothing.
        *
@@ -279,17 +310,31 @@ const CRUDFORM_READY = "crudform.ready";
        * processing, it does it from $(document).ready(). But for UI processing
        * on modal dialogs, it has to be done from $(document).on('shown.bs.modal').
        */
-      bindSelect2(this);
+      initFormset(this);
+      bindSelect2(this, this);
+      triggerCrudFormReady(this);
     });
 
-    /*
-     * Trigger CRUDFORM_READY event, if we're in legacy_crud mode. Since
-     * '<form>' element would only be present in legacy_crud mode, this code
-     * is safe in that it will not have any effect on popup crud mode.
-     * Delete item form is preloaded with list template, but we dont trigger
-     * the event for this form (checked by triggerCrudFormReady).
+    // Connect the action buttons to their relevant handlers.
+    $("[name=create_edit_object]").click(handleCreateEdit);
+    $("[name=object_detail]").click(handleObjectDetail);
+    $("a[name='delete_object']").click(handleDeleteObject);
+    $("a[name='custom_action']").click(handleCustomAction);
+
+
+    /**
+     * This code is only relevant when a CRUD's Create/Update
+     * operation form is presented in legacy mode. In this mode
+     * we still need to initialize embedded formset, select2
+     * controls & and Add Another links, if any.
      */
-    triggerCrudFormReady(document);
+    var form = document.getElementById("create-edit-form")
+    if (form) {
+      initFormset(form);
+      bindSelect2(form, form);
+      bindAddAnother($(form));
+      //triggerCrudFormReady(document);
+    }
   }
   $(document).ready(function() {
     $.fn.popupCrud({});

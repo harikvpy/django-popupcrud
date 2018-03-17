@@ -359,9 +359,15 @@ class PopupCrudFormsetRenderer(FormsetRenderer):
 
     def render_header(self):
         headers = []
-        for field in self.formset.forms[0]:
-            if not field.is_hidden:
-                headers.append("<th>%s</th>" % (field.label if field.name != 'DELETE' else '&nbsp;'))
+        form = self.formset.forms[0]
+        for name, field in form.fields.items():
+            required_style = " class='%s'" % 'required' if field.required else ''
+            bf = form[name]
+            if not bf.is_hidden:
+                headers.append("<th%s>%s</th>" % (
+                    required_style,
+                    bf.label if name != 'DELETE' else '&nbsp;')
+                    )
         return "<thead><tr>{0}</tr></thead>".format("".join(headers))
 
 
@@ -420,7 +426,7 @@ def render_formset(formset):
     label_class = get_bootstrap_setting('horizontal_label_class')
     field_class = get_bootstrap_setting('horizontal_field_class')
     output2 = r"""
-    <div id="id_formset" class="modal-formset">
+    <div id="id_formset" class="form-group modal-formset">
         <label class="{2} control-label">{0}</label>
         <div class='{3} table-wrapper'>
             {1}
@@ -429,31 +435,6 @@ def render_formset(formset):
     """.format(label, renderer._render(), label_class, field_class) # pylint: disable=W0212
 
     return mark_safe(output2)
-
-    # output = r"""
-    # <div id="id_formset">
-    #     <label class="col-md-3 control-label">{0}</label>
-    #     <div class='col-md-9' style="max-height: 250px; overflow-y: scroll;">
-    #         <table class='table table-condensed'>
-    #             <tbody>
-    # """.format(label)
-
-    # # don't forget the formset management form fields
-    # output += formset.management_form.as_p()
-
-    # # render each form of the formset
-    # for form in formset.forms:
-    #     output += _render_formset_form(form)
-
-    # # render the closing HTML fragments for the leading header
-    # output += r'''
-    #             </tbody>
-    #         </table>
-    #     </div>
-    # </div>
-    # '''
-
-    # return mark_safe(output)    # has to be marked as safe!
 
 def _render_formset_form(form):
     '''Renders a formset form within the style setting headers above.'''

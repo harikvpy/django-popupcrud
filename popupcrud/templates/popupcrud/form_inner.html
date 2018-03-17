@@ -4,23 +4,6 @@
     {% bootstrap_form form layout='horizontal' %}
     {% if formset %}
         {% render_formset formset %}
-        {% comment %}
-        Note that we're using $.one() instead of the more natural @.on() as we want
-        the handler to be removed after running. Otherwise, with every activation of
-        the modal, an extra row of 'Add' button will be added to the bottom of the
-        formset form table and an extra set of 'Delete' buttons will be added to
-        the end of every form row.
-        {% endcomment %}
-        <script>
-        $(document).one("crudform.ready", function(event) {
-            console.log("Crudform is ready!")
-            $("#id_formset table tbody tr").formset({
-                prefix: "{{ formset.prefix }}",
-                addText: '<button type="button" class="btn btn-default btn-sm" aria-label="Add"><span class="glyphicon glyphicon-plus-sign"></span> {% trans "Add " %}</button>',
-                deleteText: "<span class='glyphicon glyphicon-trash' title='{% trans "Remove" %}'></span>",
-                });
-        });
-        </script>
     {% endif %}
     {% trans "Save" as submit %}
     {% trans "Reset" as reset %}

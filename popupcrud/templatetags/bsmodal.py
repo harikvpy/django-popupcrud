@@ -131,7 +131,6 @@ def bsmodal(parser, token):
         elif option[0] == 'header_bg_css':
             header_bg_css = option[1]
         elif option[0] == 'size':
-            print("Modal size: {0}".format(option[1]))
             modal_size = template.Variable(option[1])
             # value = option[1]
             # try:
