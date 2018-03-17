@@ -266,7 +266,7 @@ const CRUDFORM_READY = "crudform.ready";
      */
     initFormset = function(parent) {
       var formsetDiv = $(parent).find('div#id_formset');
-      if (formsetDiv) {  // presence of div indicates form has formset.
+      if (formsetDiv.length > 0) {  // presence of div indicates form has formset.
         var prefix = formsetDiv.find('input[name*=TOTAL_FORMS]').attr('name').split('-')[0];
         formsetDiv.find("table tbody tr").formset({
           formTemplate: this._formsetTemplate,
