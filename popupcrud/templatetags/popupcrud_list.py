@@ -366,8 +366,7 @@ class PopupCrudFormsetRenderer(FormsetRenderer):
             if not bf.is_hidden:
                 headers.append("<th%s>%s</th>" % (
                     required_style,
-                    bf.label if name != 'DELETE' else '&nbsp;')
-                    )
+                    bf.label if name != 'DELETE' else '&nbsp;'))
         return "<thead><tr>{0}</tr></thead>".format("".join(headers))
 
 
