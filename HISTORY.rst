@@ -113,10 +113,14 @@ History
 * Make formset alignment consistent with bootstrap3 settings
   horizontal_label_class & horizontal_field_class.
 
-0.6.2 (2018-03-16)
+0.6.2 (2018-03-17)
 ++++++++++++++++++
 * Fix bug where forms with m2m fields were not saved
 * Reflect formset form field 'required' status in field column header
 * Make formsets work in legacy crud mode
 * django-select2 support in formset forms
 * Minor formset layout formatting improvements
+
+0.6.2 (2018-03-18)
+++++++++++++++++++
+* Fix incorrect formset detection logic
