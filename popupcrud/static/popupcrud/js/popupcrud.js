@@ -333,7 +333,7 @@ const CRUDFORM_READY = "crudform.ready";
       initFormset(form);
       bindSelect2(form, form);
       bindAddAnother($(form));
-      //triggerCrudFormReady(document);
+      triggerCrudFormReady(document);
     }
   }
   $(document).ready(function() {
