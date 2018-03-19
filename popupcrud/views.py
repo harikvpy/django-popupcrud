@@ -238,22 +238,28 @@ class AttributeThunk(object):
 
     @property
     def media(self):
-        _ = self._viewset.popups
+        popups = self._viewset.popups
         # don't load popupcrud.js if all crud views are set to 'legacy'
         popupcrud_media = forms.Media(
             css={'all': ('popupcrud/css/popupcrud.css',)},
-            js=('popupcrud/js/popupcrud.js', 'popupcrud/js/jquery.formset.js'))
+            js=('popupcrud/js/popupcrud.js',))
 
-        # Can't we load media of forms created using modelform_factory()?
-        # Need to investigate.
-        if self._viewset.form_class:
-            popupcrud_media += self._viewset.form_class(
-                **self._viewset.get_form_kwargs()).media
+        # Optimization: add the form and formset media only if we're either
+        # (CreateView or UpdateView) or in a ListView with popups enabled for
+        # either of 'create' or 'update' operation.
+        if isinstance(self, (CreateView, UpdateView)) or \
+            popups['create'] or popups['update']:
+            # Can't we load media of forms created using modelform_factory()?
+            # Need to investigate.
+            if self._viewset.form_class:
+                popupcrud_media += self._viewset.form_class(
+                    **self._viewset.get_form_kwargs()).media
 
-        formset_class = self._viewset.formset_class
-        if formset_class:
-            fs_media = formset_class().media
-            popupcrud_media += fs_media
+            formset_class = self._viewset.formset_class
+            if formset_class:
+                popupcrud_media.add_js('popupcrud/js/jquery.formset.js')
+                fs_media = formset_class().media
+                popupcrud_media += fs_media
 
         return popupcrud_media
 
@@ -1068,7 +1074,7 @@ class PopupCrudViewSet(object):
         Provides a normalized dict of crud view types to use for the viewset
         depending on client.legacy_crud setting.
 
-        Computes this dict only one per object as an optimization.
+        Computes this dict only once per object as an optimization.
         """
         if not hasattr(self, '_popups'):
             popups_enabled = {
