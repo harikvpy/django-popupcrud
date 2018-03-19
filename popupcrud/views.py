@@ -202,7 +202,7 @@ class AttributeThunk(object):
         if not self.request.is_ajax() and not isinstance(self, ListView): # pylint: disable=E1101
             # for legacy crud views, add the listview url to the breadcrumb
             kwargs[self._viewset.breadcrumbs_context_variable].append(
-                (self._viewset.model._meta.verbose_name_plural,
+                (self._viewset.get_page_title(),
                  self._viewset.get_list_url()))
         return super(AttributeThunk, self).get_context_data(**kwargs) # pylint: disable=E1101
 
@@ -257,7 +257,7 @@ class AttributeThunk(object):
 
             formset_class = self._viewset.formset_class
             if formset_class:
-                popupcrud_media.add_js('popupcrud/js/jquery.formset.js')
+                popupcrud_media.add_js(('popupcrud/js/jquery.formset.js',))
                 fs_media = formset_class().media
                 popupcrud_media += fs_media
 
