@@ -202,8 +202,7 @@ class AttributeThunk(object):
         if not self.request.is_ajax() and not isinstance(self, ListView): # pylint: disable=E1101
             # for legacy crud views, add the listview url to the breadcrumb
             kwargs[self._viewset.breadcrumbs_context_variable].append(
-                (self._viewset.get_page_title(),
-                 self._viewset.get_list_url()))
+                (self._viewset.get_page_title('list'), self._viewset.get_list_url()))
         return super(AttributeThunk, self).get_context_data(**kwargs) # pylint: disable=E1101
 
     @property
@@ -306,7 +305,7 @@ class ListView(AttributeThunk, PaginationMixin, PermissionRequiredMixin,
         return templates
 
     def get_context_data(self, **kwargs):
-        kwargs['pagetitle'] = self._viewset.get_page_title()
+        kwargs['pagetitle'] = self._viewset.get_page_title('list')
         context = super(ListView, self).get_context_data(**kwargs)
         context['model_options'] = self._viewset.model._meta
         context['new_button_text'] = ugettext("New {0}").format(
@@ -514,8 +513,8 @@ class CreateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
     form_template = "popupcrud/form.html"
 
     def get_context_data(self, **kwargs):
-        kwargs['pagetitle'] = ugettext("New {0}").format(
-            self._viewset.model._meta.verbose_name)
+        kwargs['pagetitle'] = self._viewset.get_page_title('create')
+            #ugettext("New {0}").format(self._viewset.model._meta.verbose_name)
         kwargs['form_url'] = self._viewset.get_new_url()
         # formset = self._viewset.get_formset()
         # if formset:
@@ -530,7 +529,8 @@ class DetailView(AttributeThunk, TemplateNameMixin, PermissionRequiredMixin,
     detail_template = "popupcrud/detail.html"
 
     def get_context_data(self, **kwargs):
-        kwargs['pagetitle'] = six.text_type(self.object)
+        kwargs['pagetitle'] = self._viewset.get_page_title('detail', self.object)
+            #six.text_type(self.object)
         # _("{0} - {1}").format(
         #     self._viewset.model._meta.verbose_name,
         #     six.text_type(self.object))
@@ -544,8 +544,8 @@ class UpdateView(AttributeThunk, TemplateNameMixin, AjaxObjectFormMixin,
     form_template = "popupcrud/form.html"
 
     def get_context_data(self, **kwargs):
-        kwargs['pagetitle'] = ugettext("Edit {0}").format(
-            self._viewset.model._meta.verbose_name)
+        kwargs['pagetitle'] = self._viewset.get_page_title('update', obj=self.object)
+            #ugettext("Edit {0}").format(self._viewset.model._meta.verbose_name)
         kwargs['form_url'] = self._viewset.get_edit_url(self.object)
         return super(UpdateView, self).get_context_data(**kwargs)
 
@@ -555,7 +555,8 @@ class DeleteView(AttributeThunk, PermissionRequiredMixin, generic.DeleteView):
     template_name = "popupcrud/confirm_delete.html"
 
     def get_context_data(self, **kwargs):
-        kwargs['pagetitle'] = ugettext("Delete {0}").format(self._viewset.model._meta.verbose_name)
+        kwargs['pagetitle'] = self._viewset.get_page_title('delete', obj=self.object)
+            #ugettext("Delete {0}").format(self._viewset.model._meta.verbose_name)
         kwargs['model_options'] = self._viewset.model._meta
         return super(DeleteView, self).get_context_data(**kwargs)
 
@@ -669,6 +670,28 @@ class PopupCrudViewSet(object):
     #: List of permission names for the delete view.
     #: Defaults to no permissions, meaning no permission is required.
     delete_permission_required = ()
+
+    #: Permissions table for the various CRUD views. Use this instead
+    #: of list_permission_required, create_permission_required, etc.
+    #: Entries in this table are indexed by the CRUD view code and its
+    #: required permissions tuple. CRUD view codes are: 'list', 'create',
+    #: 'detail', 'update' & 'delete'.
+    #:
+    #: Note that if both the legacy `<crud-op>_permission_required` and
+    #: `permissons_required` are specified, `permissions_required`
+    #: setting value takes effect.
+    #:
+    #: For example you can specify::
+    #:
+    #:  permissions_required = {
+    #:      'list': ('library.list_author',),
+    #:      'create': ('library.list_author',),
+    #:      'detail': ('library.view_author',),
+    #:      'update': ('library.update_author',),
+    #:      'delete': ('library.delete_author',)
+    #:  }
+    #:
+    permissions_required = {}
 
     #: The template file to use for list view. If not specified, defaults
     #: to the internal template.
@@ -988,11 +1011,36 @@ class PopupCrudViewSet(object):
             'update': self.update_permission_required,
             'delete': self.delete_permission_required
         }
+
+        # Update with self.permissions_required dict values
+        permission_table.update(self.permissions_required)
+
         return permission_table[op]
 
-    def get_page_title(self):
-        #: Returns the page title for the list view. By default returns the
-        #: value of class variable ``page_title``.
+    def get_page_title(self, view, obj=None):
+        """
+        Returns page title for the CRUD view. Parameter `view`
+        specifies the CRUD view whose page title is being queried
+        and is one of `create`, `detail`, `update`, `delete` or `list`.
+
+        For `detail`, `update` & `delete` views, the model instance is
+        is passed as second argument. For the rest of the views, this
+        is set to `None`.
+        """
+        if view == 'create':
+            return ugettext("New {0}").format(
+                self.model._meta.verbose_name)
+        elif view == 'update':
+            return ugettext("Edit {0}").format(
+                self.model._meta.verbose_name)
+        elif view == 'detail':
+            return ugettext("{0} Details").format(
+                self.model._meta.verbose_name)
+        elif view == 'delete':
+            return ugettext("Delete {0}").format(
+                self.model._meta.verbose_name)
+
+        # list view
         return self.page_title if self.page_title else \
                 self.model._meta.verbose_name_plural
 
