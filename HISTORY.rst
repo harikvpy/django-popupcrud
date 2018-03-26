@@ -121,6 +121,14 @@ History
 * django-select2 support in formset forms
 * Minor formset layout formatting improvements
 
-0.6.2 (2018-03-18)
+0.6.3 (2018-03-18)
 ++++++++++++++++++
 * Fix incorrect formset detection logic
+
+0.6.4 (2018-03-26)
+++++++++++++++++++
+* Optimize listview media when create & edit are set to legacy
+* Breadcrumbs obeys custom page title
+* Fix bug in ListView.media optimization
+* Introduce permissions_required attribute
+* PopupCrudViewSet.get_page_title now used in for all CRUD(legacy) views
