@@ -653,24 +653,36 @@ class PopupCrudViewSet(object):
     #: List of permission names for the list view. Permission names are of the
     #: same format as what is specified in ``permission_required()`` decorator.
     #: Defaults to no permissions, meaning no permission is required.
+    #:
+    #: Depracated. Use :ref:`permissions_required <permissions_required>` dictionary instead.
     list_permission_required = ()
 
     #: List of permission names for the create view.
     #: Defaults to no permissions, meaning no permission is required.
+    #:
+    #: Depracated. Use :ref:`permissions_required <permissions_required>` dictionary instead.
     create_permission_required = ()
 
     #: List of permission names for the detail view.
     #: Defaults to no permissions, meaning no permission is required.
+    #:
+    #: Depracated. Use :ref:`permissions_required <permissions_required>` dictionary instead.
     detail_permission_required = ()
 
     #: List of permission names for the update view.
     #: Defaults to no permissions, meaning no permission is required.
+    #:
+    #: Depracated. Use :ref:`permissions_required <permissions_required>` dictionary instead.
     update_permission_required = ()
 
     #: List of permission names for the delete view.
     #: Defaults to no permissions, meaning no permission is required.
+    #:
+    #: Depracated. Use :ref:`permissions_required <permissions_required>` dictionary instead.
     delete_permission_required = ()
 
+    #: .. _permissions_required:
+    #:
     #: Permissions table for the various CRUD views. Use this instead
     #: of list_permission_required, create_permission_required, etc.
     #: Entries in this table are indexed by the CRUD view code and its
