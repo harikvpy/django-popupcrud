@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from django.utils import six
 
 from .models import Author, Book
-from .views import AuthorCrudViewset, BookCrudViewset
+from .views import AuthorCrudViewset, BookCrudViewset, BookUUIDCrudViewSet
 
 RE_CREATE_EDIT_FORM = r"\n<form class=\'form-horizontal\' id=\'create-edit-form\' action=\'{0}\' method=\'post\' accept-charset=\'utf-8\'>.*</form>"
 
@@ -91,7 +91,8 @@ class PopupCrudViewSetTests(TestCase):
         self.assertNotContains(response, "<th>Age</th>")
         self.assertContains(response, "No records found")
 
-    def test_urls(self):
+    def test_object_access_through_pk_urls(self):
+        '''Test CRUDViewset view access using object.pk based urls'''
         for _ in range(0, 10):
             Author.objects.create(name="John", age=25)
         response = self.client.get(reverse("authors"))
@@ -101,6 +102,18 @@ class PopupCrudViewSetTests(TestCase):
             self.assertContains(response, AuthorCrudViewset().get_edit_url(obj))
             self.assertContains(response, AuthorCrudViewset().get_delete_url(obj))
             self.assertContains(response, AuthorCrudViewset().get_detail_url(obj))
+
+    def test_object_access_through_slug_urls(self):
+        '''Test CRUDViewset view access using slug_field based urls'''
+        john = Author.objects.create(name='Peter', age=25)
+        for index in range(1, 10):
+            Book.objects.create(title='Title %d' % index, author=john)
+        response = self.client.get(reverse("uuidbooks:list"))
+        self.assertContains(response, BookUUIDCrudViewSet.new_url)
+        for obj in Book.objects.all():
+            self.assertContains(response, BookUUIDCrudViewSet().get_edit_url(obj))
+            self.assertContains(response, BookUUIDCrudViewSet().get_delete_url(obj))
+            self.assertContains(response, BookUUIDCrudViewSet().get_detail_url(obj))
 
     def test_pagination(self):
         for _ in range(0, 30):

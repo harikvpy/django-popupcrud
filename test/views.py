@@ -7,9 +7,10 @@ try:
 except ImportError:
     _select2 = False
 
-from .models import Author, Book
 from popupcrud.widgets import RelatedFieldPopupFormWidget
 from popupcrud.views import PopupCrudViewSet
+
+from .models import Author, Book
 
 # Create your views here.
 
@@ -99,3 +100,28 @@ class BookCrudViewset(PopupCrudViewSet):
 
     def down_vote(self, request, book):
         return True, "Down vote successful"
+
+
+class BookUUIDCrudViewSet(PopupCrudViewSet):
+    '''CRUD views using slug field as url kwarg instead of the default pk'''
+
+    model = Book
+    form_class = BookForm
+    list_display = ('title', 'author')
+    list_url = reverse_lazy("uuidbooks:list")
+    new_url = reverse_lazy("uuidbooks:create")
+    pk_url_kwarg = None
+    slug_field = 'uuid'
+    slug_url_kwarg = 'uuid'
+
+    @staticmethod
+    def get_edit_url(obj):
+        return reverse("uuidbooks:update", kwargs={'uuid': obj.uuid.hex})
+
+    @staticmethod
+    def get_delete_url(obj):
+        return reverse("uuidbooks:delete", kwargs={'uuid': obj.uuid.hex})
+
+    @staticmethod
+    def get_detail_url(obj):
+        return reverse("uuidbooks:detail", kwargs={'uuid': obj.uuid.hex})

@@ -184,6 +184,22 @@ class AttributeThunk(object):
     def fields(self):
         return self._viewset.fields
 
+    @property
+    def context_object_name(self):
+        return self._viewset.context_object_name
+
+    @property
+    def pk_url_kwarg(self):
+        return self._viewset.pk_url_kwarg
+
+    @property
+    def slug_field(self):
+        return self._viewset.slug_field
+
+    @property
+    def slug_url_kwarg(self):
+        return self._viewset.slug_url_kwarg
+
     def get_success_url(self):
         return self._viewset.get_list_url()
 
@@ -856,6 +872,34 @@ class PopupCrudViewSet(object):
     #:      }
     modal_sizes = {}
 
+    #: If specified, the name of the context variable that will be used to
+    #: assign the object instance value. By default the context variable
+    #: `'object'` will be assigned the object instance. If
+    #: `context_object_name` is specified, that too will be assigned the
+    #: object instance.
+    context_object_name = None
+
+    #: Same as `SingleObjectMixin.pk_url_kwarg`, which is the name
+    #: of the URLConf keyword argument that contains the primary key. By
+    #: default, `pk_url_kwarg` is `'pk'`.
+    pk_url_kwarg = 'pk'
+
+    #: Same as `SingleObjectMixin.slug_field`, which is the name of the field
+    #: on the model that contains the slug. By default, `slug_field` is
+    #: `'slug'`.
+    #:
+    #: To use `slug_field` as the key to access object instances
+    #: (for detail, update & delete views), set `pk_url_kwarg = None` in the
+    #: ViewSet class and initialize `slug_field` and `slug_url_kwarg` to the
+    #: relevant slug field's name & its corresponding URLconf parameter name
+    #: respectively.
+    slug_field = 'slug'
+
+    #: Same as `SingleObjectMixin.slug_url_kwarg`, which is the name of the
+    #: URLConf keyword argument that contains the slug. By default,
+    #: `slug_url_kwarg` is `'slug'`.
+    slug_url_kwarg = 'slug'
+
     @classonlymethod
     def _generate_view(cls, crud_view_class, **initkwargs):
         """
@@ -1112,14 +1156,17 @@ class PopupCrudViewSet(object):
             # start with only list url, the rest are optional based on views arg
             urls = [url(r'$', cls.list(), name='list')]
 
+            obj_url_pattern = r'(?P<%s>\w+)' % (cls.pk_url_kwarg \
+                if cls.pk_url_kwarg else cls.slug_url_kwarg)
+
             if 'detail' in views:
-                urls.insert(0, url(r'^(?P<pk>\d+)/$', cls.detail(), name='detail'))
+                urls.insert(0, url(r'^%s/$' % obj_url_pattern, cls.detail(), name='detail'))
 
             if 'delete' in views:
-                urls.insert(0, url(r'^(?P<pk>\d+)/delete/$', cls.delete(), name='delete'))
+                urls.insert(0, url(r'^%s/delete/$' % obj_url_pattern, cls.delete(), name='delete'))
 
             if 'update' in views:
-                urls.insert(0, url(r'^(?P<pk>\d+)/update/$', cls.update(), name='update'))
+                urls.insert(0, url(r'^%s/update/$' % obj_url_pattern, cls.update(), name='update'))
 
             if 'create' in views:
                 urls.insert(0, url(r'^create/$', cls.create(), name='create'))

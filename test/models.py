@@ -1,3 +1,5 @@
+import uuid
+
 from django.utils.encoding import python_2_unicode_compatible
 
 from django.db import models
@@ -26,6 +28,7 @@ class Author(models.Model):
 class Book(models.Model):
     title = models.CharField("Title", max_length=128)
     author = models.ForeignKey(Author)
+    uuid = models.UUIDField(default=uuid.uuid4)
 
     class Meta:
         ordering = ('title',)
