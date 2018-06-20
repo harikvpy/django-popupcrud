@@ -132,3 +132,14 @@ History
 * Fix bug in ListView.media optimization
 * Introduce permissions_required attribute
 * PopupCrudViewSet.get_page_title now used in for all CRUD(legacy) views
+
+0.7.0 (2018-06-20)
+++++++++++++++++++
+* Add support for ``pk_url_kwarg``, ``slug_field``, ``slug_url_kwarg`` &
+  ``context_object_name`` ViewSet attributes.
+* Improve documentation
+
+0.7.1 (2018-06-20)
+++++++++++++++++++
+* Update release history
+
