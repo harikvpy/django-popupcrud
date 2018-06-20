@@ -874,30 +874,36 @@ class PopupCrudViewSet(object):
 
     #: If specified, the name of the context variable that will be used to
     #: assign the object instance value. By default the context variable
-    #: `'object'` will be assigned the object instance. If
-    #: `context_object_name` is specified, that too will be assigned the
+    #: ``object`` will be assigned the object instance. If
+    #: ``context_object_name`` is specified, that too will be assigned the
     #: object instance.
     context_object_name = None
 
-    #: Same as `SingleObjectMixin.pk_url_kwarg`, which is the name
+    #: Same as `SingleObjectMixin.pk_url_kwarg
+    #: <https://docs.djangoproject.com/en/1.11/ref/class-based-views/mixins-single-object/#django.views.generic.detail.SingleObjectMixin.pk_url_kwarg>`_,
+    #: which is the name
     #: of the URLConf keyword argument that contains the primary key. By
-    #: default, `pk_url_kwarg` is `'pk'`.
+    #: default, ``pk_url_kwarg`` is `pk``.
     pk_url_kwarg = 'pk'
 
-    #: Same as `SingleObjectMixin.slug_field`, which is the name of the field
-    #: on the model that contains the slug. By default, `slug_field` is
-    #: `'slug'`.
+    #: Same as `SingleObjectMixin.slug_field
+    #: <https://docs.djangoproject.com/en/1.11/ref/class-based-views/mixins-single-object/#django.views.generic.detail.SingleObjectMixin.slug_field>`_,
+    #: which is the name of the field
+    #: on the model that contains the slug. By default, ``slug_field`` is
+    #: ``slug``.
     #:
-    #: To use `slug_field` as the key to access object instances
-    #: (for detail, update & delete views), set `pk_url_kwarg = None` in the
-    #: ViewSet class and initialize `slug_field` and `slug_url_kwarg` to the
+    #: To use ``slug_field`` as the key to access object instances
+    #: (for detail, update & delete views), set ``pk_url_kwarg = None`` in the
+    #: ViewSet class and initialize ``slug_field`` and ``slug_url_kwarg`` to the
     #: relevant slug field's name & its corresponding URLconf parameter name
     #: respectively.
     slug_field = 'slug'
 
-    #: Same as `SingleObjectMixin.slug_url_kwarg`, which is the name of the
+    #: Same as `SingleObjectMixin.slug_url_kwarg
+    #: <https://docs.djangoproject.com/en/1.11/ref/class-based-views/mixins-single-object/#django.views.generic.detail.SingleObjectMixin.slug_url_kwarg>`_,
+    #: which is the name of the
     #: URLConf keyword argument that contains the slug. By default,
-    #: `slug_url_kwarg` is `'slug'`.
+    #: ``slug_url_kwarg`` is ``slug``.
     slug_url_kwarg = 'slug'
 
     @classonlymethod
@@ -1118,6 +1124,13 @@ class PopupCrudViewSet(object):
         This method can be seen as a wrapper to calling the individual view
         generator methods, ``list()``, ``detail()``, ``create()``, ``update()``
         & ``delete()``, to register them with the URLconf.
+
+        The urls for CRUD actions involving a single object (detail, update
+        & delete) are by default composed using ``pk`` as URLConf keyword
+        argument. However, if ``pk_url_kwarg`` is set to None and ``slug_field``
+        and ``slug_url_kwarg`` are initialized, it will be based as the field
+        used to locate the individual object and URLConf keyword argument
+        respectively.
 
         :param namespace: The namespace under which the CRUD urls are registered.
             Defaults to the value of ``<model>.Meta.verbose_name_plural`` (in
