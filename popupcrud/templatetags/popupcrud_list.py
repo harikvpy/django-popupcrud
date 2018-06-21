@@ -83,7 +83,7 @@ def list_display_headers(view, queryset):
 
     for i, field_name in enumerate(view._viewset.list_display):
         text, attr = lff(field_name, view.model, view._viewset, return_attr=True)
-
+        text = mark_safe(text)  # takes care of embedded tags in header labels
         if attr:
             field_name = _coerce_field_name(field_name, i)
             # Potentially not sortable
@@ -157,11 +157,15 @@ def list_display_headers(view, queryset):
         #yield label_for_field(view, queryset, field_name)
 
     # Action column
-    yield {
-        'text': ugettext("Action"),
-        'sortable': False,
-        'class_attrib': 'class=text-uppercase col-action'
-    }
+    dummy_obj = queryset.model()
+    if view._viewset.get_edit_url(dummy_obj) or \
+        view._viewset.get_delete_url(dummy_obj) or \
+        view._viewset.item_actions:
+        yield {
+            'text': ugettext("Action"),
+            'sortable': False,
+            'class_attrib': 'class=text-uppercase col-action'
+        }
 
 
 def list_field_value(view, obj, field, context, index):
