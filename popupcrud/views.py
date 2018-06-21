@@ -219,6 +219,7 @@ class AttributeThunk(object):
             # for legacy crud views, add the listview url to the breadcrumb
             kwargs[self._viewset.breadcrumbs_context_variable].append(
                 (self._viewset.get_page_title('list'), self._viewset.get_list_url()))
+        self._viewset.get_context_data(kwargs)
         return super(AttributeThunk, self).get_context_data(**kwargs) # pylint: disable=E1101
 
     @property
@@ -1338,3 +1339,23 @@ class PopupCrudViewSet(object):
             return action_method(request, item)
 
         return (False, ugettext("Action failed"))
+
+    def get_context_data(self, kwargs):
+        """
+        Called for every CRUD view's get_context_data() method, this method
+        allows additional data to be added to the CRUD view's template context.
+
+        :param kwargs: The kwargs dictionary that is the usual argument to
+            View.get_context_data()
+
+        :rtype: None
+
+        If you want to add context data for a specific CRUD view, you can
+        achieve this by checking the view object's class type. For example the
+        following code adds context data only for DetailView::
+
+            if isinstance(self.view, DetailView):
+                obj = kwargs['object']
+                kwargs['user_fullname'] = obj.user.first_name + ' ' + obj.user.last_name
+        """
+        pass
