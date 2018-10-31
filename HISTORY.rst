@@ -143,3 +143,8 @@ History
 ++++++++++++++++++
 * Update release history
 
+0.8.0 (2018-10-31)
+++++++++++++++++++
+* Allow html tags in custom column headers; hide Action column if there're
+  no item actions
+* Support view template context data in ViewSet
