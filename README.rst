@@ -36,7 +36,7 @@ Quickstart
 
    Or install it directly from the source repository:
 
-   ``pip intall git+https://github.com/harikvpy/django-popupcrud.git``
+   ``pip install git+https://github.com/harikvpy/django-popupcrud.git``
 
    Yet another way would be to clone this repository and install from the cloned
    root folder via ``pip install -e .``.
