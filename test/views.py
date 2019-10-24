@@ -1,4 +1,4 @@
-from django.core.urlresolvers import reverse_lazy, reverse
+from django.urls import reverse_lazy, reverse
 from django import forms
 
 try:
@@ -46,6 +46,7 @@ class AuthorCrudViewset(PopupCrudViewSet):
         return reverse("author-detail", kwargs={'pk': obj.pk})
 
     def get_edit_url(self, obj):
+        obj.pk = obj.pk or 1
         return reverse("edit-author", kwargs={'pk': obj.pk})
 
     def get_delete_url(self, obj):

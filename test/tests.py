@@ -4,9 +4,7 @@ import re
 import json
 
 from django.test import TestCase
-from django.core.urlresolvers import reverse
-from django.http import JsonResponse
-from django.utils import six
+from django.urls import reverse
 
 from .models import Author, Book
 from .views import AuthorCrudViewset, BookCrudViewset, BookUUIDCrudViewSet

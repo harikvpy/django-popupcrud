@@ -273,7 +273,7 @@ class AttributeThunk(object):
 
             formset_class = self._viewset.formset_class
             if formset_class:
-                popupcrud_media.add_js(('popupcrud/js/jquery.formset.js',))
+                popupcrud_media._js_lists.append(('popupcrud/js/jquery.formset.js',))
                 fs_media = formset_class().media
                 popupcrud_media += fs_media
 
@@ -1185,7 +1185,7 @@ class PopupCrudViewSet(object):
             if 'create' in views:
                 urls.insert(0, url(r'^create/$', cls.create(), name='create'))
 
-            cls._urls = include(urls, namespace)
+            cls._urls = include((urls, 'library'), namespace)
 
         return cls._urls
 

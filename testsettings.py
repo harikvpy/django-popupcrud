@@ -20,7 +20,7 @@ INSTALLED_APPS = [
 
 ROOT_URLCONF = "test.urls"
 
-MIDDLEWARE_CLASSES = [
+MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
 ]

@@ -27,7 +27,7 @@ class Author(models.Model):
 @python_2_unicode_compatible
 class Book(models.Model):
     title = models.CharField("Title", max_length=128)
-    author = models.ForeignKey(Author)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
     uuid = models.UUIDField(default=uuid.uuid4)
 
     class Meta:
