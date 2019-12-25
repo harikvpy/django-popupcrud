@@ -148,3 +148,7 @@ History
 * Allow html tags in custom column headers; hide Action column if there're
   no item actions
 * Support view template context data in ViewSet
+
+0.9.0 (2019-12-25)
+++++++++++++++++++
+* Django 3.0 support
