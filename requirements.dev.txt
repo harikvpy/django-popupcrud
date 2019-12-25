@@ -1,0 +1,4 @@
+-r requirements.txt
+pylint-django
+sphinx
+twine

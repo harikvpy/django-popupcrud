@@ -9,9 +9,10 @@ from django.template import Library
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext
 from django.utils.html import format_html
-from django.utils import six
 from django.utils.text import capfirst
 from django.contrib.admin.utils import lookup_field, label_for_field as lff
+
+import six
 
 from bootstrap3.renderers import FormRenderer, FormsetRenderer
 from bootstrap3.bootstrap import get_bootstrap_setting
@@ -158,6 +159,7 @@ def list_display_headers(view, queryset):
 
     # Action column
     dummy_obj = queryset.model()
+    dummy_obj.pk = 1
     if view._viewset.get_edit_url(dummy_obj) or \
         view._viewset.get_delete_url(dummy_obj) or \
         view._viewset.item_actions:

@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "${workspaceFolder}\\pyenv\\Scripts\\python.exe",
+    "python.pythonPath": "/Users/hari/.virtualenvs/qqden/bin/python",
     "python.linting.pylintArgs": [
         "--load-plugins=pylint_django",
         "--disable=C0103, C0301, C0111, R0901, R0903, R0904, R0201, W0613"

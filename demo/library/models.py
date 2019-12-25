@@ -31,7 +31,7 @@ class Author(models.Model):
 class Book(models.Model):
     title = models.CharField(_("Title"), max_length=128)
     isbn = models.CharField("ISBN", max_length=12)
-    author = models.ForeignKey(Author)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
 
     class Meta:
         ordering = ('title',)
@@ -44,7 +44,7 @@ class Book(models.Model):
 
 @python_2_unicode_compatible
 class AuthorRating(models.Model):
-    author = models.ForeignKey(Author)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
     rating = models.CharField("Rating", max_length=1, choices=(
         ('1', '1 Star'),
         ('2', '2 Stars'),
@@ -63,7 +63,7 @@ class AuthorRating(models.Model):
 
 @python_2_unicode_compatible
 class BookRating(models.Model):
-    book = models.ForeignKey(Book)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
     rating = models.CharField("Rating", max_length=1, choices=(
         ('1', '1 Star'),
         ('2', '2 Stars'),

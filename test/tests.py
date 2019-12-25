@@ -4,9 +4,13 @@ import re
 import json
 
 from django.test import TestCase
-from django.core.urlresolvers import reverse
 from django.http import JsonResponse
-from django.utils import six
+try:
+    from django.urls import reverse
+except expression as identifier:
+    from django.core.urlresolvers import reverse
+
+import six
 
 from .models import Author, Book
 from .views import AuthorCrudViewset, BookCrudViewset, BookUUIDCrudViewSet

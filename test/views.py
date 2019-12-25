@@ -1,5 +1,8 @@
-from django.core.urlresolvers import reverse_lazy, reverse
 from django import forms
+try:
+    from django.urls import reverse_lazy, reverse
+except expression as identifier:
+    from django.core.urlresolvers import reverse_lazy, reverse
 
 try:
     from django_select2.forms import Select2Widget

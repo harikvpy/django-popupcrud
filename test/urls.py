@@ -7,6 +7,6 @@ urlpatterns = [
     url(r'^authors/(?P<pk>\d+)/$', views.AuthorCrudViewset.detail(), name='author-detail'),
     url(r'^authors/(?P<pk>\d+)/edit/$', views.AuthorCrudViewset.update(), name='edit-author'),
     url(r'^authors/(?P<pk>\d+)/delete/$', views.AuthorCrudViewset.delete(), name='delete-author'),
-    url(r'^books/', views.BookCrudViewset.urls()),
+    url(r'^books/', views.BookCrudViewset.urls(namespace='books')),
     url(r'^uuidbooks/', views.BookUUIDCrudViewSet.urls(namespace='uuidbooks')),
 ]

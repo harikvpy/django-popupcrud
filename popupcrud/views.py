@@ -1189,7 +1189,7 @@ class PopupCrudViewSet(object):
             if 'create' in views:
                 urls.insert(0, url(r'^create/$', cls.create(), name='create'))
 
-            cls._urls = include(urls, namespace)
+            cls._urls = include((urls, namespace), namespace)
 
         return cls._urls
 
