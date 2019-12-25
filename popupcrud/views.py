@@ -11,7 +11,7 @@ from django.conf import settings
 from django.conf.urls import include, url
 from django.core.exceptions import (
     FieldDoesNotExist, ObjectDoesNotExist)
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from django.views import generic
 from django.http import JsonResponse
 from django.template import loader
@@ -20,9 +20,13 @@ from django.contrib import messages
 from django.utils.decorators import classonlymethod
 from django.utils.translation import ugettext_lazy as _, ugettext, override
 from django.utils.http import urlencode
-from django.utils import six
 from django.utils.safestring import mark_safe
 from django.utils.functional import cached_property
+
+try:
+    from django.utils import six
+except ImportError:
+    import six
 
 #from django.contrib.admin import ModelAdmin
 
@@ -160,7 +164,7 @@ class AjaxObjectFormMixin(object):
 
     def handle_no_permission(self):
         if self.request.is_ajax():
-            return render_to_response('popupcrud/403.html')
+            return render(self.request, 'popupcrud/403.html')
         return super(AjaxObjectFormMixin, self).handle_no_permission()
 
 

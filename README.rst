@@ -17,7 +17,7 @@ Requirements
 ------------
 
 - Python 2.7, 3.4
-- Django >= 1.9
+- Django >= 1.11
 - `django-bootstrap3 <https://github.com/dyve/django-bootstrap3.git>`_
 - `django-pure-pagination <https://github.com/jamespacileo/django-pure-pagination.git>`_
 
