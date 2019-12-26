@@ -277,7 +277,7 @@ class AttributeThunk(object):
 
             formset_class = self._viewset.formset_class
             if formset_class:
-                popupcrud_media.add_js(('popupcrud/js/jquery.formset.js',))
+                popupcrud_media += forms.Media(js=('popupcrud/js/jquery.formset.js',))
                 fs_media = formset_class().media
                 popupcrud_media += fs_media
 

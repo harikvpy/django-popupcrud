@@ -19,8 +19,8 @@ from django.views.generic import TemplateView
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^accounts/', include('django.contrib.auth.urls', namespace='accounts')),
-    url(r'^library/', include('library.urls', namespace='library')),
+    url(r'^accounts/', include(('django.contrib.auth.urls', 'accounts'), namespace='accounts')),
+    url(r'^library/', include(('library.urls', 'library'), namespace='library')),
     url(r'^$', TemplateView.as_view(template_name="home.html"), name='home'),
 ]
 
