@@ -154,9 +154,13 @@ History
 * Django 3.0 support
 
 0.10.0 (2019-12-26)
-++++++++++++++++++
++++++++++++++++++++
 * Fix rendering bugs owing to changes in Django 3.0
 
 0.11.0 (2019-12-26)
-++++++++++++++++++
++++++++++++++++++++
 * Bump min Django ver to 2.2.8
+
+0.12.0 (2019-12-26)
++++++++++++++++++++
+* Fix README formatting errors

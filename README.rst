@@ -1,3 +1,4 @@
+================
 django-popupcrud
 ================
 
@@ -16,9 +17,9 @@ Requirements
 ------------
 
 - Python >= 3.4
-- Django >= 1.11
-- `django-bootstrap3 <https://github.com/dyve/django-bootstrap3.git>`_
-- `django-pure-pagination <https://github.com/jamespacileo/django-pure-pagination.git>`_
+- Django >= 2.2.8
+- django-bootstrap3
+- django-pure-pagination
 
 Documentation
 -------------

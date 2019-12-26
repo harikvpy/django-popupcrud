@@ -18,7 +18,7 @@ setup(
     version=version,
     description='A CRUD framework that uses HTML popups for CRUD operations.',
     long_description=README + '\n\n' + HISTORY,
-    long_description_content_type="text/markdown",
+    long_description_content_type="text/x-rst",
     license='BSD 3-Clause License',
     packages=[
         'popupcrud'
