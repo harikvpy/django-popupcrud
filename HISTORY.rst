@@ -152,3 +152,7 @@ History
 0.9.0 (2019-12-25)
 ++++++++++++++++++
 * Django 3.0 support
+
+0.10.0 (2019-12-26)
+++++++++++++++++++
+* Fix rendering bugs owing to changes in Django 3.0
