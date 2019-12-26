@@ -156,3 +156,7 @@ History
 0.10.0 (2019-12-26)
 ++++++++++++++++++
 * Fix rendering bugs owing to changes in Django 3.0
+
+0.11.0 (2019-12-26)
+++++++++++++++++++
+* Bump min Django ver to 2.2.8
