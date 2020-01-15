@@ -2,10 +2,10 @@
     <div class="modal-dialog modal-dialog-top {{ size_css }}" role="document">
         <div class="modal-content">
             <div class="modal-header">
+                <h4 class="modal-title">{{ title }}</h4>
                 {% if close_btn %}
                     <button type="button" class="close" data-dismiss="modal" aria-label=""><span aria-hidden="true">&times;</span></button>
                 {% endif %}
-                <h4 class="modal-title">{{ title }}</h4>
             </div>
             <div class="modal-body">
                 {{ body }}
