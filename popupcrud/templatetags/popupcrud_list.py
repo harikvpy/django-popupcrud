@@ -208,11 +208,11 @@ def list_field_value(view, obj, field, context, index):
 
 
 def render_item_actions(context, obj):
-    popup_edit_template = six.text_type('<a name="create_edit_object" data-url="{0}" data-title="{1}" href="javascript:void(0);"><span class="glyphicon glyphicon-pencil" title="{1}"></span></a>')
-    popup_delete_template = six.text_type('<a name="delete_object" data-url="{0}" data-title="{1}" href="javascript:void(0);"><span class="glyphicon glyphicon-trash" title="{1}"></span></a>')
+    popup_edit_template = six.text_type('<a name="create_edit_object" data-url="{0}" data-title="{1}" href="javascript:void(0);"><span class="glyphicon glyphicon-pencil fa fa-edit" title="{1}"></span></a>')
+    popup_delete_template = six.text_type('<a name="delete_object" data-url="{0}" data-title="{1}" href="javascript:void(0);"><span class="glyphicon glyphicon-trash fa fa-trash" title="{1}"></span></a>')
 
-    legacy_edit_template = six.text_type('<a href="{0}"><span class="glyphicon glyphicon-pencil" title="{1}"></span></a>')
-    legacy_delete_template = six.text_type('<a href="{0}"><span class="glyphicon glyphicon-trash" title="{1}"></span></a>')
+    legacy_edit_template = six.text_type('<a href="{0}"><span class="glyphicon glyphicon-pencil fa fa-edit" title="{1}"></span></a>')
+    legacy_delete_template = six.text_type('<a href="{0}"><span class="glyphicon glyphicon-trash fa fa-trash" title="{1}"></span></a>')
 
     view = context['view']
     edit_url = view._viewset.get_edit_url(obj)
