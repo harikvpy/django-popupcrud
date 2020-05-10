@@ -32,7 +32,7 @@ Quickstart
 
 1. Install ``django-popupcrud`` using pip:
 
-   ``pip install django-popucrud``
+   ``pip install django-popupcrud``
 
    Or install it directly from the source repository:
 
